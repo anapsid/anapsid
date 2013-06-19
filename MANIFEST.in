@@ -1,0 +1,2 @@
+include ANAPSID/Catalog/endpoints.desc
+include ANAPSID/Catalog/generalPredicates

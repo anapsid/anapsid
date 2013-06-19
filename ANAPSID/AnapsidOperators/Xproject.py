@@ -1,0 +1,34 @@
+'''
+Created on Jul 10, 2011
+
+Implements the Xproject operator.
+The intermediate results are represented in a queue. 
+
+@author: Maribel Acosta Deibe
+'''
+from multiprocessing import Queue
+
+class Xproject(object):
+    
+    def __init__(self, vars):
+        self.input       = Queue()
+        self.qresults   = Queue()
+        self.vars  = vars
+        
+    def execute(self, left, dummy, out):
+        # Executes the Xproject.
+        self.left = left
+        self.qresults = out
+        tuple = self.left.get(True)
+        while (not(tuple == "EOF")):
+            res = {}
+            for var in self.vars:
+                res.update({var:tuple[var]})
+            
+            self.qresults.put(res)
+            tuple = self.left.get(True)
+            
+        # Put EOF in queue and exit. 
+        self.qresults.put("EOF")
+        return
+    

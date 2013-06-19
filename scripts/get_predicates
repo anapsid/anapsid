@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+import sys
+from multiprocessing import Queue
+from ANAPSID.Planner.Plan import contactSource
+
+QUERY = 'select distinct ?p where { ?s ?p ?o . }'
+FORMAT = '<%s> %s . '
+
+def get_predicates(q):
+    elem = q.get()
+    while elem != 'EOF':
+        yield elem['p']
+        elem = q.get()
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print 'Please, enter a file with your endpoints URLs.'
+        sys.exit(1)
+    with open(sys.argv[1], 'r') as f:
+        endpoints = [x.strip() for x in f.readlines() if x]
+        m = {}
+        for endpoint in endpoints:
+            q = Queue()
+            contactSource(endpoint, QUERY, q)
+            m[endpoint] = [p for p in get_predicates(q)]
+
+    result = []
+    for (k,v) in m.items():
+        s = ' '.join('<%s>' % x for x in v)
+        result.append(FORMAT % (k, s))
+    print '\n'.join(result)
