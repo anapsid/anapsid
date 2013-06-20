@@ -3,6 +3,14 @@ ANAPSID
 
 An adaptive query processing engine for SPARQL endpoints.
 
+[1] Maribel Acosta, Maria-Esther Vidal, Tomas Lampo, Julio Castillo,
+Edna Ruckhaus: ANAPSID: An Adaptive Query Processing Engine for SPARQL
+Endpoints. International Semantic Web Conference (1) 2011: 18-34
+
+[2] Gabriela Montoya, Maria-Esther Vidal, Maribel Acosta: A
+Heuristic-Based Approach for Planning Federated SPARQL Queries. COLD
+2012
+
 Installing ANAPSID
 ==================
 
@@ -76,8 +84,8 @@ We include three heuristics used for decomposing queries to be
 evaluated by a federation of endpoints. These are:
 
 1. Exclusive Groups (EG).
-2. Star-Shaped Group Single endpoint selection (SSGS).
-3. Star-Shaped Group Multiple endpoint selection (SSGM).
+2. Star-Shaped Group Single endpoint selection (SSGS). See [2].
+3. Star-Shaped Group Multiple endpoint selection (SSGM). See [2].
 
 About and Contact
 =================
@@ -89,6 +97,13 @@ can contact the current maintainers by email at anapsid[at]ldc[dot]usb[dot]ve.
 We strongly encourage you to please report any issues you have with
 ANAPSID. You can do that over our contact email or creating a new
 issue here on Github.
+
+- Simón Castillo: scastillo [at] ldc [dot] usb [dot] ve
+- Guillermo Palma: gpalma [at] ldc [dot] usb [dot] ve
+- Maria-Esther Vidal: mvidal [at] ldc [dot] usb [dot] ve
+- Gabriela Montoya: Gabriela [dot] Montoya [at] univ-nantes [dot] fr
+- Maribel Acosta: maribel [dot] acosta [at] kit [dot] edu
+
 
 License
 =======
