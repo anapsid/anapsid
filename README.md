@@ -63,7 +63,7 @@ About supported endpoints
 
 ANAPSID currently supports endpoints that answer queries either on XML
 or JSON. Expect hard failures if you intend to use ANAPSID on
-endpoints that answer in any other exotic format.
+endpoints that answer in any other format.
 
 Running ANAPSID
 ===============
