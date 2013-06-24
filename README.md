@@ -23,10 +23,28 @@ instructions to get a working ANAPSID install:
 
 2. Once you install VirtualEnv Burrito, create a new VirtualEnv for
    your ANAPSID install:
-   `$ mkvirtualenv anapsid`
 
-3. Clone this repository using Git. Go to your local copy of ANAPSID
-   and run:
+   `$ mkvirtualenv anapsid --no-site-packages`
+
+   Once you run this command you will be inside a dedicated VirtualEnv
+   for ANAPSID. It should automatically append (anapsid) at the beginning
+   of your command line. The only way to execute ANAPSID related commands
+   is by entering this VirtualEnv. You can do so, in the future by running:
+
+   `$ workon anapsid`
+
+   To exit the ANAPSID VirtualEnv, just run:
+
+   `$ deactivate`
+
+   From now on, we assume you are working inside the ANAPSID VirtualEnv.
+
+3. Clone this repository using Git.
+
+   `$ git clone https://github.com/anapsid/anapsid.git ~/anapsid`
+
+4. Go to your local copy of ANAPSID and run:
+
    `$ pip install -r requirements.txt`
 
    This will install ANAPSID's Python dependencies.
@@ -54,7 +72,7 @@ endpoints descriptions as to prevent errors.
    predicates, so it might take a while. This will save your endpoint
    descriptions on endpointsDescriptions.txt
 
-   `$ get_predicates endpointsURLs.txt > endpointsDescriptions.txt`
+   `$ get_predicates endpointsURLs.txt endpointsDescriptions.txt`
 
 3. You are ready to run ANAPSID.
 

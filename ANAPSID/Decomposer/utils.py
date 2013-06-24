@@ -1,5 +1,4 @@
 import time
-import pydot
 from multiprocessing import Queue
 
 def prefix(p):
@@ -59,53 +58,3 @@ def count(endpoint, triples, ps, c):
     q = Queue()
     b = c(server, query, q)
     return b
-
-# used for generating graph topology image
-def write_graph(graph, triplets):
-    g = pydot.Dot(graph_type='graph')
-    added = [[False for j in range(len(triplets))] for i in range(len(triplets))]
-    nodes = [pydot.Node('T%d %s ' % (i, ', '.join(triplets[i].getVars())))
-             for i, v in enumerate(graph)]
-    for x in nodes:
-        g.add_node(x)
-    for i,v in enumerate(graph):
-        for j in v:
-            if not added[i][j] or not added[j][i]:
-                g.add_edge(pydot.Edge(nodes[i], nodes[j]))
-                added[i][j] = True
-                added[j][i] = True
-    g.write_png('graph_topology.%s.png' % str(time.time()))
-
-# colored graph topology
-colors = ['#A200FF', '#FF0097', '#00ABA9', '#8CBF26', '#A05000', '#E671B8',
-          '#F09609', '#1BA1E2', '#E51400', '#339933']
-def color_graph(filename, graph, triplets, services, sub):
-    g = pydot.Dot(graph_type='graph')
-    added = [[False for j in range(len(triplets))] for i in range(len(triplets))]
-    color = {}
-    # G = pgv.Graph("Mi grafo")
-    cur_color = 0
-    for s in services:
-        for y in s.triples:
-            color[y] = cur_color
-        cur_color +=1
-    for ub in sub:
-        try:
-            for y in ub.triples[0].triples[0].triples:
-                color[y] = cur_color
-        except TypeError:
-            color[ub.triples[0].triples[0].triples] = cur_color
-        cur_color += 1
-
-    nodes = [pydot.Node('T%d %s ' % (i, ', '.join(triplets[i].getVars())),
-                        style='filled', fillcolor=colors[color[triplets[i]]])
-             for i,v in enumerate(graph)]
-    for x in nodes:
-        g.add_node(x)
-    for i,v in enumerate(graph):
-        for j in v:
-            if not added[i][j] or not added[j][i]:
-                g.add_edge(pydot.Edge(nodes[i], nodes[j]))
-                added[i][j] = True
-                added[j][i] = True
-    g.write_png('%s.%s.png' % (filename, str(time.time())))

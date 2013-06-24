@@ -13,8 +13,8 @@ def get_predicates(q):
         elem = q.get()
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print 'Please, enter a file with your endpoints URLs.'
+    if len(sys.argv) < 3:
+        print 'Usage: %s [input-file] [output-file]' % sys.argv[0]
         sys.exit(1)
     with open(sys.argv[1], 'r') as f:
         endpoints = [x.strip() for x in f.readlines() if x]
@@ -28,4 +28,6 @@ if __name__ == '__main__':
     for (k,v) in m.items():
         s = ' '.join('<%s>' % x for x in v)
         result.append(FORMAT % (k, s))
-    print '\n'.join(result)
+    with open(sys.argv[2], 'w') as f:
+        f.write('\n'.join(result))
+    print 'Wrote file %s. Done!' % sys.argv[2]
