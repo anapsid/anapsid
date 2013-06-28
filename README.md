@@ -110,7 +110,7 @@ About and Contact
 
 ANAPSID was developed at
 [Universidad Simón Bolívar](http://www.usb.ve) as an ongoing academic effort. You
-can contact the current maintainers by email at anapsid[at]ldc[dot]usb[dot]ve.
+can contact the current maintainers by email at mvidal[at]ldc[dot]usb[dot]ve.
 
 We strongly encourage you to please report any issues you have with
 ANAPSID. You can do that over our contact email or creating a new
