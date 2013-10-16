@@ -206,7 +206,7 @@ class Leaf(Tree):
         subquery = "SELECT "+d+ subvars + " WHERE {" + subquery + "}"
         return (self.service.endpoint, query.getPrefixes()+subquery, set(variables))
 
-    def getCount(self, query, vars):
+    def getCount(self, query, vars, endpointType):
         subquery = self.service.getTriples()
         if len(vars) == 0:
             vs = self.service.getVars()
@@ -227,7 +227,10 @@ class Leaf(Tree):
                 vars_str = "*"
 
         d = "DISTINCT "
-        subquery = "SELECT COUNT "+d+ vars_str + " WHERE {" + subquery + "}"
+        if (endpointType=="V"):
+             subquery = "SELECT COUNT "+d+ vars_str + "  WHERE {" + subquery + "}"
+        else:
+            subquery = "SELECT ( COUNT ("+d+ vars_str + ") AS ?cnt)  WHERE {" + subquery + "}"
         return (self.service.endpoint, query.getPrefixes()+subquery)
 
     def getVars(self):

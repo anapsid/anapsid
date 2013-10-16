@@ -37,6 +37,8 @@ from ANAPSID.Decomposer.services import UnionBlock, JoinBlock, Query
 from SPARQLWrapper import SPARQLWrapper, JSON, N3, XML
 from SPARQLWrapper.Wrapper import QueryResult
 
+endpType = None
+
 def getText(nodelist):
     rc = []
 
@@ -207,7 +209,8 @@ def contactProxy(server, query, queue, buffersize=16384):
     # print "llego aqui"
     return b
 
-def createPlan(query, adaptive, wc, buffersize, c):
+def createPlan(query, adaptive, wc, buffersize, c, endpointType):
+    endpType = endpointType
 
     operatorTree = includePhysicalOperatorsQuery(query, adaptive, wc,
                                                  buffersize, c)
@@ -423,7 +426,7 @@ class IndependentOperator(object):
 
 def askCount(query, tree, vars, contact):
 
-    (server, query) = tree.getCount(query, vars)
+    (server, query) = tree.getCount(query, vars, endpType)
 
     q = Queue()
     b = contact(server, query, q)

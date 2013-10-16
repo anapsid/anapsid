@@ -21,7 +21,7 @@ from ANAPSID.Planner.Plan import contactSource, contactProxy
 from ANAPSID.Decomposer import decomposer
 
 def runQuery(query_file, endpoint_file, buffer_size, simulated, res,
-             decomposition, p, oo, a, wc, k):
+             decomposition, p, oo, a, wc, k, endpointType):
     if simulated:
         contact = contactProxy
     else:
@@ -70,7 +70,7 @@ def runQuery(query_file, endpoint_file, buffer_size, simulated, res,
         printInfo()
         return
 
-    plan = Plan.createPlan(new_query, a, wc, buffer_size, contact)
+    plan = Plan.createPlan(new_query, a, wc, buffer_size, contact, endpointType)
 
     pt = time() - time1
     #print 'creando procesos'
@@ -168,7 +168,7 @@ def usage():
 
 def get_options(argv):
     try:
-        opts, args = getopt.getopt(argv, "h:e:q:b:s:p:o:d:a:k:w:")
+        opts, args = getopt.getopt(argv, "h:e:q:b:s:p:o:d:a:k:w:t")
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -183,6 +183,7 @@ def get_options(argv):
     adaptive = True
     withoutCounts = False
     k = "n"
+    endpointType = 'V'
 
     for opt, arg in opts:
         if opt == "-h":
@@ -208,12 +209,14 @@ def get_options(argv):
             adaptive = arg == "True"
         elif opt == "-w":
             withoutCounts = arg == "True"
+        elif opt == '-t':
+            endpointType = arg
 
     if (not endpointfile and not one_point_one) or not queryfile:
         usage()
         sys.exit(1)
     return (endpointfile, queryfile, buffersize, simulated,
-            decomposition, plan, one_point_one, adaptive, withoutCounts, k)
+            decomposition, plan, one_point_one, adaptive, withoutCounts, k, endpointType)
 
 def main(argv):
     # manager = Manager()
@@ -221,10 +224,10 @@ def main(argv):
     res = Queue()
     time1 = time()
     (endpoint, query, buffersize, simulated,
-     decomposition, plan, oo, a, wc, k)          = get_options(argv[1:])
+     decomposition, plan, oo, a, wc, k, endpointType)          = get_options(argv[1:])
     try:
        runQuery(query, endpoint, buffersize, simulated, res,
-             decomposition, plan, oo, a, wc, k)
+             decomposition, plan, oo, a, wc, k, endpointType)
     except Exception as ex:
        print ex
 
