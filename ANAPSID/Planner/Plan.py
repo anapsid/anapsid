@@ -8,120 +8,232 @@ as Python dictionaries and are stored in queues.
 @author: Maribel Acosta Deibe
 @author: Gabriela Montoya
 
-Last modification: June, 2013
+Last modification: December, 2013
 '''
 from __future__ import division
 from multiprocessing import Process, Queue, active_children
+from Catalog.Catalog import Catalog
+from AnapsidOperators.Xgjoin import Xgjoin
+from AnapsidOperators.Xnjoin import Xnjoin
+from AnapsidOperators.Xgoptional import Xgoptional
+from AnapsidOperators.Xnoptional import Xnoptional
+from AnapsidOperators.Xunion import Xunion
+from AnapsidOperators.Xproject import Xproject
+from AnapsidOperators.Xdistinct import Xdistinct
+from NonBlockingOperators.SymmetricHashJoin import SymmetricHashJoin
+from NonBlockingOperators.NestedHashJoin import NestedHashJoin
+from NonBlockingOperators.NestedHashOptional import NestedHashOptional
+from BlockingOperators.HashJoin import HashJoin
+from BlockingOperators.HashOptional import HashOptional
+from BlockingOperators.NestedLoopOptional import NestedLoopOptional
+from BlockingOperators.NestedLoopJoin import NestedLoopJoin
+from BlockingOperators.Union import Union
 import socket
 import urllib
 import string
 import time
 import signal
 import sys, os
-from ANAPSID.Catalog.Catalog import Catalog
-from ANAPSID.AnapsidOperators.Xgjoin import Xgjoin
-from ANAPSID.AnapsidOperators.Xnjoin import Xnjoin
-from ANAPSID.AnapsidOperators.Xgoptional import Xgoptional
-from ANAPSID.AnapsidOperators.Xunion import Xunion
-from ANAPSID.AnapsidOperators.Xproject import Xproject
-from ANAPSID.NonBlockingOperators.SymmetricHashJoin import SymmetricHashJoin
-from ANAPSID.NonBlockingOperators.NestedHashJoin import NestedHashJoin
-from ANAPSID.BlockingOperators.HashJoin import HashJoin
-from ANAPSID.BlockingOperators.HashOptional import HashOptional
-from ANAPSID.BlockingOperators.NestedLoopOptional import NestedLoopOptional
-from ANAPSID.BlockingOperators.NestedLoopJoin import NestedLoopJoin
-from ANAPSID.BlockingOperators.Union import Union
-from ANAPSID.Decomposer.Tree import Leaf, Node
-from ANAPSID.Decomposer.services import Service, Argument, Triple, Filter, Optional
-from ANAPSID.Decomposer.services import UnionBlock, JoinBlock, Query
-from SPARQLWrapper import SPARQLWrapper, JSON, N3, XML
-from SPARQLWrapper.Wrapper import QueryResult
+from Decomposer.Tree import Leaf, Node
+from Decomposer.services import Service, Argument, Triple, Filter, Optional
+from Decomposer.services import UnionBlock, JoinBlock, Query
+from SPARQLWrapper import SPARQLWrapper, JSON, N3
 
-endpType = None
+def contactSource(server, query, queue, buffersize=16384, limit=-1):
+    
+    #Contacts the datasource (i.e. real endpoint).
+    #Every tuple in the answer is represented as Python dictionaries
+    #and is stored in a queue.
+    if (limit == -1):
+        
+        # Build the query and contact the source.
+        sparql = SPARQLWrapper(server, queue)
+        sparql.setQuery(query)
+        sparql.setReturnFormat(JSON)
+        try:
+            res = sparql.query()
+        except Exception as e:
+	    queue.put("EOF")
+            return  None
+        f = res.info()["content-type"]
+        
 
-def getText(nodelist):
-    rc = []
+        res = res.convert()
+        b = None
+	
 
-    for node in nodelist:
-        if node.nodeType == node.TEXT_NODE:
-            rc.append(node.data)
-    return ''.join(rc)
+        if type(res) == dict:
+            b = res.get('boolean', None)
+            
+            if 'results' in res:
+                for x in res['results']['bindings']:
+                    for key, props in x.iteritems():
+                        x[key] = props['value']
+
+                reslist = res['results']['bindings']
+
+                # Every tuple is added to the queue.
+                for elem in reslist:
+                    
+                    queue.put(elem)
+        else:
+            
+            print ("the source "+str(server)+" answered in "+f+" format, instead of"
+                   +" the JSON format required, then that answer will be ignored")
 
 
-class AnapsidQueryResult(QueryResult):
-    """A query result that reimplement conversion methods for JSON and
-    XML, storing results in a queue and returns a boolean.
+    #Contacts the datasource (i.e. real endpoint) incrementally, 
+    #retreiving partial result sets combining the SPARQL sequence
+    #modifiers LIMIT and OFFSET.
+    #Every tuple in the answer is represented as Python dictionaries
+    #and is stored in a queue.
+    else:
+         
+        # Build the query and contact the source.
+        sparql = SPARQLWrapper(server)
+    
+        # Set up to offset.
+        offset = 0
+        b = None
+    
+        while True:
+            query_copy = query + " LIMIT " + str(limit) + " OFFSET " + str(offset)
+            sparql.setQuery(query_copy)
+            sparql.setReturnFormat(JSON)
+        
+            try:
+                res = sparql.query()
+            except Exception as e:
+                queue.put("EOF")
+                return  None
+    
+            f = res.info()["content-type"]
+            res = res.convert()
+            
+        
+            if type(res) == dict:
+                b = res.get('boolean', None)
+                if 'results' in res:
+                    for x in res['results']['bindings']:
+                        for key, props in x.iteritems():
+                            x[key] = props['value']
 
-    """
+                    reslist = res['results']['bindings']
 
-    def __init__(self, *args, **kwargs):
-        self.queue = kwargs.pop('queue', None)
-        QueryResult.__init__(self, *args, **kwargs)
+                # Every tuple is added to the queue.
+                for elem in reslist:
+                    queue.put(elem)
+            else:
+                print ("the source "+str(server)+" answered in "+f+" format, instead of"
+                       +" the JSON format required, then that answer will be ignored")
+            #print "len(res[results][bindings]", len(res['results']['bindings']) 
+            if (len(res['results']['bindings']) < limit):
+                break
+        
+            offset = offset + limit
+    
+    #Close the queue
+    if b == None:
+        queue.put("EOF")
+    return b
 
-    def _convertJSON(self):
-        res = QueryResult._convertJSON(self)
-        ret = res.get('boolean', None)
-        if 'results' in res:
-            for x in res['results']['bindings']:
-                for key, props in x.iteritems():
-                    x[key] = props['value']
+# Deprecated: Merged with contactSource (16-12-2013)
+#def contactSourceIncrementally(server, query_original, queue, limit=50):
+#    '''
+#    Contacts the datasource (i.e. real endpoint)incrementally
+#    retreiving partial result sets combining the SPARQL sequence
+#    modifiers LIMIT and OFFSET.
+#    Every tuple in the answer is represented as Python dictionaries
+#    and is stored in a queue.
+#    '''
+#    # Build the query and contact the source.
+#    sparql = SPARQLWrapper(server)
+#    # Set up to offset.
+#    offset = 0
+#    b=None
+#  
+#    while True:
+#      query = query_original + " LIMIT " + str(limit) + " OFFSET " + str(offset)
+#      sparql.setQuery(query)
+#      sparql.setReturnFormat(JSON)
+#      
+#      try:
+#        res=sparql.query()
+#      except:
+#        queue.put("EOF")
+#        return None
+#      f = res.info()["content-type"]
+#      res = res.convert()
+#      if type(res) == dict:
+#         b = res.get('boolean', None)
+#         if 'results' in res:
+#           for x in res['results']['bindings']:
+#              for key, props in x.iteritems():
+#                  x[key] = props['value']
+#           reslist = res['results']['bindings']
+#          # Every tuple is added to the queue.
+#           for elem in reslist:
+#             queue.put(elem)
+#      else:
+#        print ("the source "+str(server)+" answered in "+f+" format, instead of" +" the JSON format required, then that answer will be ignored")
+#      if (len(res['results']['bindings']) < limit):
+#         break
+#      offset = offset + limit
+#
+#    #Close the queue
+#    if b == None:
+#        queue.put("EOF")
+#    return b
 
-            reslist = res['results']['bindings']
+# Deprecated: Merged with contactSourceIncrementally (16-12-2013)      
+#def contactSource(server, query, queue, buffersize=16384):
+#    '''
+#    Contacts the datasource (i.e. real endpoint).
+#    Every tuple in the answer is represented as Python dictionaries
+#    and is stored in a queue.
+#    '''
+#
+#    # Build the query and contact the source.
+#    sparql = SPARQLWrapper(server, queue)
+#    #print "query: "+str(query)
+#    sparql.setQuery(query)
+#    sparql.setReturnFormat(JSON)
+#    try:
+#        res = sparql.query()
+#    except:
+#        #print 'ignoring'
+#        queue.put("EOF")
+#        return  None
+#    f = res.info()["content-type"]
+#    res = res.convert()
+#    b = None
+#
+#    if type(res) == dict:
+#        b = res.get('boolean', None)
+#	#print b
+#        if 'results' in res:
+#            for x in res['results']['bindings']:
+#                for key, props in x.iteritems():
+#                    x[key] = props['value']
+#
+#            reslist = res['results']['bindings']
+#
+#            # Every tuple is added to the queue.
+#            for elem in reslist:
+#                #print elem
+#                queue.put(elem)
+#    else:
+#        
+#        print res
+#        print ("the source "+str(server)+" answered in "+f+" format, instead of"
+#               +" the JSON format required, then that answer will be ignored")
+#    #Close the queue
+#    if b == None:
+#        #print 'aqui'
+#        queue.put("EOF")
+#    return b
 
-            # Every tuple is added to the queue.
-            for elem in reslist:
-                self.queue.put(elem)
-        if ret is None: self.queue.put('EOF')
-        return ret
-
-    def _convertXML(self):
-        res = QueryResult._convertXML(self)
-        boolean_dom = res.getElementsByTagName('boolean')
-        b = boolean_dom[0].firstChild.nodeValue if boolean_dom else None
-        results = res.getElementsByTagName('results')
-        if results:
-            results = results.pop()
-            for r in results.getElementsByTagName("result"):
-                elem = {}
-                for binding in r.getElementsByTagName("binding"):
-                    elem.update({binding.attributes["name"].value : getText(binding.childNodes[0].childNodes)})
-                self.queue.put(elem)
-        if b is None: self.queue.put('EOF')
-        return b
-
-class AnapsidSPARQLWrapper(SPARQLWrapper):
-    """An SPARQL Wrapper subclass that takes a queue to store results.
-    """
-
-    def __init__(self, *args, **kwargs):
-        self.queue = kwargs.pop('queue', None)
-        SPARQLWrapper.__init__(self, *args, **kwargs)
-
-    def query(self):
-        return AnapsidQueryResult(self._query(), queue=self.queue)
-
-def contactSource(server, query, queue, buffersize=16384):
-    '''
-    Contacts the datasource (i.e. real endpoint).
-    Every tuple in the answer is represented as Python dictionaries
-    and is stored in a queue.
-    '''
-
-    # Build the query and contact the source.
-    sparql = AnapsidSPARQLWrapper(server, queue=queue)
-    print "query: "+str(query)
-    sparql.setQuery(query)
-    sparql.setReturnFormat(JSON)
-    res = sparql.queryAndConvert()
-    if isinstance(res, str):
-        print res
-        print ("the source "+str(server)+" answered in an unexpected format, instead of"
-               +" the JSON or XML format required, then that answer will be ignored")
-        queue.put('EOF')
-        return None
-    return res
-
-def contactProxy(server, query, queue, buffersize=16384):
+def contactProxy(server, query, queue, buffersize=16384, limit=50):
     '''
     Contacts the proxy (i.e. simulator that can divede the answer in packages)
     Every tuple in the answer is represented as Python dictionaries
@@ -206,15 +318,23 @@ def contactProxy(server, query, queue, buffersize=16384):
         queue.put("EOF")
     #Close the connection
     s.close()
-    # print "llego aqui"
+    
     return b
 
-def createPlan(query, adaptive, wc, buffersize, c, endpointType):
-    endpType = endpointType
-
+def createPlan(query, adaptive, wc, buffersize, c):
+    #print "create Plan: Plan.py 167"
     operatorTree = includePhysicalOperatorsQuery(query, adaptive, wc,
                                                  buffersize, c)
-    #print(operatorTree.aux(""))
+    
+    # Adds the project operator to the plan.
+    if (query.args != []):
+        operatorTree = TreePlan(Xproject(query.args), operatorTree.vars, operatorTree)
+
+    # Adds the distinct operator to the plan.
+    if (query.distinct):
+        operatorTree = TreePlan(Xdistinct(None), operatorTree.vars, operatorTree)
+
+    #print "opertator type:", operatorTree
     return operatorTree
 
 def includePhysicalOperatorsQuery(query, a, wc, buffersize, c):
@@ -227,7 +347,6 @@ def includePhysicalOperatorsUnionBlock(query, ub, a, wc, buffersize, c):
     for jb in ub.triples:
         r.append(includePhysicalOperatorsJoinBlock(query, jb,
                                                    a, wc, buffersize, c))
-
     while len(r) > 1:
         left = r.pop(0)
         right = r.pop(0)
@@ -235,7 +354,7 @@ def includePhysicalOperatorsUnionBlock(query, ub, a, wc, buffersize, c):
         all_variables  = left.vars | right.vars
 
         if a:
-            n =  TreePlan(Xunion(left.vars, right.vars, query.distinct),
+            n =  TreePlan(Xunion(left.vars, right.vars),
                           all_variables, left, right)
         else:
             n =  TreePlan(Union(left.vars, right.vars, query.distinct),
@@ -252,10 +371,51 @@ def includePhysicalOperatorsOptional(left, rightList, a):
     l = left
 
     for right in rightList:
+        
         all_variables  = left.vars | right.vars
+        
         if a:
-            l = TreePlan(Xgoptional(left.vars, right.vars),
-                         all_variables, l, right)
+            lowSelectivityLeft = l.allTriplesLowSelectivity()
+            lowSelectivityRight = right.allTriplesLowSelectivity()
+            join_variables = l.vars & right.vars
+
+            dependent_op = False
+            # Case 1: left operator is highly selective and right operator is low selective
+            if not(lowSelectivityLeft) and lowSelectivityRight:
+                l = TreePlan(NestedHashOptional(left.vars, right.vars), all_variables, l, right)
+                dependent_op = True
+                #print "Planner CASE 1: nested optional"
+
+            # Case 2: left operator is low selective and right operator is highly selective
+            elif lowSelectivityLeft and not(lowSelectivityRight):
+                l = TreePlan(NestedHashOptional(left.vars, right.vars), all_variables, right, l)
+                dependent_op = True
+                #print "Planner CASE 2: nested loop optional swapping plan"
+
+            # Case 3: both operators are low selective
+            else:
+                 l =  TreePlan(Xgoptional(left.vars, right.vars), all_variables, l, right)
+                 #print "Planner CASE 3: xgoptional"
+
+            
+            if isinstance(l.left, IndependentOperator) and isinstance(l.left.tree, Leaf):
+                if (l.left.constantPercentage() <= 0.5):
+                    l.left.tree.service.limit = 10000 # Fixed value, this can be learnt in the future 
+                    #print "modifying limit optional left ..."
+
+            if isinstance(l.right, IndependentOperator) and isinstance(l.right.tree, Leaf):
+                if not(dependent_op):
+                    if (l.right.constantPercentage() <= 0.5):
+                        l.right.tree.service.limit = 10000 # Fixed value, this can be learnt in the future 
+                        #print "modifying limit optional right ..."
+                else:
+                    new_constants = 0
+                    for v in join_variables:
+                        new_constants = new_constants + l.right.query.show().count(v)
+                    if ((l.right.constantNumber() + new_constants)/l.right.places() <= 0.5):
+                        l.right.tree.service.limit = 10000 # Fixed value, this can be learnt in the future
+                        #print "modifying limit optional right ..."
+
         else:
             l = TreePlan(HashOptional(left.vars, right.vars),
                          all_variables, l, right)
@@ -265,7 +425,6 @@ def includePhysicalOperatorsJoinBlock(query, jb, a, wc, buffersize, c):
 
     tl = []
     ol = []
-
     if isinstance(jb.triples, list):
         for bgp in jb.triples:
             if isinstance(bgp, Node) or isinstance(bgp, Leaf):
@@ -280,7 +439,8 @@ def includePhysicalOperatorsJoinBlock(query, jb, a, wc, buffersize, c):
     elif isinstance(jb.triples, Node) or isinstance(jb.triples, Leaf):
         tl = [includePhysicalOperators(query, jb.triples, a, wc, buffersize, c)]
     else: # this should never be the case..
-        print "type of triples: "+str(type(jb.triples))
+        pass
+        #print "type of triples: "+str(type(jb.triples))
 
     while len(tl) > 1:
         l = tl.pop(0)
@@ -298,28 +458,97 @@ def includePhysicalOperatorsJoinBlock(query, jb, a, wc, buffersize, c):
 def includePhysicalOperatorJoin(a, wc, l, r):
     join_variables = l.vars & r.vars
     all_variables  = l.vars | r.vars
+    noInstantiatedLeftStar = False
+    noInstantiatedRightStar = False
+    lowSelectivityLeft = l.allTriplesLowSelectivity()
+    lowSelectivityRight = r.allTriplesLowSelectivity()
 
+    #print wc
+    #print join_variables
+    #print l.allTriplesLowSelectivity()
     if a:
-        if l.allTriplesLowSelectivity() or (len(join_variables) == 0):
-            c = False
-        elif wc:
-            c = True
-        else:
-            lsc = l.getCardinality()
-            c = (lsc <= 30)
-            if c and not r.allTriplesLowSelectivity():
-                c = c and (lsc <= 0.3*r.getCardinality())
-
-        if (not wc) and (l.constantPercentage() >= 0.5) and (len(join_variables) > 0) and c:
+        #if lowSelectivityLeft or (len(join_variables) == 0):
+        #    c = False
+        #elif wc:
+        #    c = True
+        #else:
+        #    lsc = l.getCardinality()
+        #    c = (lsc <= 30)
+        #    if c and not lowSelectivityRight:
+        #        c = c and (lsc <= 0.3*r.getCardinality())
+        
+        dependent_join = False
+        #if (noInstantiatedRightStar) or ((not wc) and (l.constantPercentage() >= 0.5) and (len(join_variables) > 0) and c):
+        # Case 1: left operator is highly selective and right operator is low selective
+	if not(lowSelectivityLeft) and lowSelectivityRight:
             n = TreePlan(NestedHashJoin(join_variables), all_variables, l, r)
-        else:
-            n =  TreePlan(Xgjoin(join_variables), all_variables, l, r)
+            dependent_join = True
+            #print "Planner CASE 1: nested loop"
+	
+        # Case 2: left operator is low selective and right operator is highly selective
+	elif lowSelectivityLeft and not(lowSelectivityRight):
+	    n = TreePlan(NestedHashJoin(join_variables), all_variables, r, l)
+            dependent_join = True
+            #print "Planner CASE 2: nested loop swapping plan"	
+        # Case 3: both operators are low selective
+	else:
+	    n =  TreePlan(Xgjoin(join_variables), all_variables, l, r)
+            #print "Planner CASE 3: xgjoin"
+
+	if isinstance(n.left, IndependentOperator) and isinstance(n.left.tree, Leaf):
+	    if (n.left.constantPercentage() <= 0.5):
+                n.left.tree.service.limit = 10000 # Fixed value, this can be learnt in the future 
+                #print "modifying limit left ..."   
+
+        if isinstance(n.right, IndependentOperator) and isinstance(n.right.tree, Leaf):
+            if not(dependent_join):
+                if (n.right.constantPercentage() <= 0.5):
+                    n.right.tree.service.limit = 10000 # Fixed value, this can be learnt in the future
+                    #print "modifying limit right ..."
+            else:
+                new_constants = 0
+                for v in join_variables:
+                    new_constants = new_constants + n.right.query.show().count(v)
+                if ((n.right.constantNumber() + new_constants)/n.right.places() <= 0.5):
+                    n.right.tree.service.limit = 10000 # Fixed value, this can be learnt in the future
+                    #print "modifying limit right ..."
+            
+     
     else:
         n =  TreePlan(HashJoin(join_variables), all_variables, l, r)
     return n
 
-def includePhysicalOperators(query, tree, a, wc, buffersize, c):
 
+#def includePhysicalOperatorJoin(a, wc, l, r):
+#    join_variables = l.vars & r.vars
+#    all_variables  = l.vars | r.vars
+#    noInstantiatedStar = False
+#    print wc
+#    print join_variables
+#    print l.allTriplesLowSelectivity()
+#    if a:
+#        if l.allTriplesLowSelectivity() or (len(join_variables) == 0):
+#            c = False
+#        elif wc:
+#            c = True
+#        else:
+#            lsc = l.getCardinality()
+#            c = (lsc <= 30)
+#            if c and not r.allTriplesLowSelectivity():
+#                c = c and (lsc <= 0.3*r.getCardinality())
+#        if (l.constantPercentage() == float(1.0)/3) or (r.constantPercentage() == float(1.0)/3):
+#              noInstantiatedStar = True
+#        if (noInstantiatedStar) or ((not wc) and (l.constantPercentage() >= 0.5) and (len(join_variables) > 0) and c):
+#            n = TreePlan(NestedHashJoin(join_variables), all_variables, l, r)
+#        else:
+#            #n = TreePlan(NestedHashJoin(join_variables), all_variables, l, r)
+#            n =  TreePlan(Xgjoin(join_variables), all_variables, l, r)
+#    else:
+#        n =  TreePlan(HashJoin(join_variables), all_variables, l, r)
+#    return n
+
+def includePhysicalOperators(query, tree, a, wc, buffersize, c):
+    
     if isinstance(tree, Leaf):
         if isinstance(tree.service, Service):
             return IndependentOperator(query, tree, c, buffersize)
@@ -361,6 +590,7 @@ class IndependentOperator(object):
         self.buffersize = buffersize
         self.cardinality = None
         self.joinCardinality = []
+	#self.limit = limit
 
     def instantiate(self, d):
         new_tree = self.tree.instantiate(d)
@@ -393,6 +623,7 @@ class IndependentOperator(object):
         return self.tree.places()
 
     def constantNumber(self):
+
         return self.tree.constantNumber()
 
     def constantPercentage(self):
@@ -402,12 +633,13 @@ class IndependentOperator(object):
         return self.tree.aux(n)
 
     def execute(self, outputqueue):
-        # Evaluate the independent operator.
+        
+	# Evaluate the independent operator.
         self.q = None
         self.q = Queue()
         self.p = Process(target=self.contact,
                          args=(self.server, self.query_str,
-                               self.q, self.buffersize,))
+                               self.q, self.buffersize, self.tree.service.limit,)) 
         self.p.start()
 
         while True:
@@ -426,12 +658,16 @@ class IndependentOperator(object):
 
 def askCount(query, tree, vars, contact):
 
-    (server, query) = tree.getCount(query, vars, endpType)
-
+    (server, query) = tree.getCount(query, vars)
+#    print "queryCount" + query
     q = Queue()
     b = contact(server, query, q)
 
+    
     res = q.get()
+    #print res
+    if (res == "EOF"):
+        return 20000
     for k in res:
         v = res[k]
     q.get()
@@ -483,6 +719,7 @@ class DependentOperator(object):
         for i in range(len(variables)):
             self.query = string.replace(self.query, "?" + variables[i], "", 1)
             self.query = string.replace(self.query, "?" + variables[i], "<" + instances[i] + ">")
+
 
         # If the instance has no ?query. Example: DESCRIBE ---
         if (instances[0].find("sparql?query") == -1):
@@ -638,7 +875,7 @@ class TreePlan(object):
 
     def execute(self, outputqueue):
         # Evaluates the execution plan.
-        if self.left and self.right:
+        if self.left: #and this.right: # This line was modified by mac in order to evaluate unary operators
             qleft  = Queue()
             qright = Queue()
 
@@ -647,16 +884,17 @@ class TreePlan(object):
             p1 = Process(target=self.left.execute, args=(qleft,))
             p1.start()
 
-            if (self.operator.__class__.__name__ == "NestedHashJoin"):
+            if ((self.operator.__class__.__name__ == "NestedHashJoin") or
+                (self.operator.__class__.__name__ == "NestedHashOptional")):
                 self.p = Process(target=self.operator.execute,
                                  args=(qleft, self.right, outputqueue,))
                 self.p.start()
                 return
 
             # Check the right node to determine if evaluate it or not.
-            if ((self.right.__class__.__name__ == "IndependentOperator") or
-                (self.right.__class__.__name__ == "TreePlan")):
-                qright = Queue()
+            if (self.right and ((self.right.__class__.__name__ == "IndependentOperator") or
+                (self.right.__class__.__name__ == "TreePlan"))):
+                #qright = Queue()
                 p2 = Process(target=self.right.execute, args=(qright,))
                 p2.start()
             else:
