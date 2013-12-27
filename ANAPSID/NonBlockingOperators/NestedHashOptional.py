@@ -11,10 +11,10 @@ Date: November 18th, 2013
 from OperatorStructures import Table, Partition, Record
 from multiprocessing import Queue, Process
 from time import time
-from Decomposer.Tree import Leaf, Node
+from ANAPSID.Decomposer.Tree import Leaf, Node
 import string, sys
 from Queue import Empty
-from Operators.Optional import Optional
+from ANAPSID.Operators.Optional import Optional
 
 class NestedHashOptional(Optional):
 
