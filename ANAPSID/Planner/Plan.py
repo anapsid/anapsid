@@ -12,32 +12,32 @@ Last modification: December, 2013
 '''
 from __future__ import division
 from multiprocessing import Process, Queue, active_children
-from Catalog.Catalog import Catalog
-from AnapsidOperators.Xgjoin import Xgjoin
-from AnapsidOperators.Xnjoin import Xnjoin
-from AnapsidOperators.Xgoptional import Xgoptional
-from AnapsidOperators.Xnoptional import Xnoptional
-from AnapsidOperators.Xunion import Xunion
-from AnapsidOperators.Xproject import Xproject
-from AnapsidOperators.Xdistinct import Xdistinct
-from NonBlockingOperators.SymmetricHashJoin import SymmetricHashJoin
-from NonBlockingOperators.NestedHashJoin import NestedHashJoin
-from NonBlockingOperators.NestedHashOptional import NestedHashOptional
-from BlockingOperators.HashJoin import HashJoin
-from BlockingOperators.HashOptional import HashOptional
-from BlockingOperators.NestedLoopOptional import NestedLoopOptional
-from BlockingOperators.NestedLoopJoin import NestedLoopJoin
-from BlockingOperators.Union import Union
+from ANAPSID.Catalog.Catalog import Catalog
+from ANAPSID.AnapsidOperators.Xgjoin import Xgjoin
+from ANAPSID.AnapsidOperators.Xnjoin import Xnjoin
+from ANAPSID.AnapsidOperators.Xgoptional import Xgoptional
+from ANAPSID.AnapsidOperators.Xnoptional import Xnoptional
+from ANAPSID.AnapsidOperators.Xunion import Xunion
+from ANAPSID.AnapsidOperators.Xproject import Xproject
+from ANAPSID.AnapsidOperators.Xdistinct import Xdistinct
+from ANAPSID.NonBlockingOperators.SymmetricHashJoin import SymmetricHashJoin
+from ANAPSID.NonBlockingOperators.NestedHashJoin import NestedHashJoin
+from ANAPSID.NonBlockingOperators.NestedHashOptional import NestedHashOptional
+from ANAPSID.BlockingOperators.HashJoin import HashJoin
+from ANAPSID.BlockingOperators.HashOptional import HashOptional
+from ANAPSID.BlockingOperators.NestedLoopOptional import NestedLoopOptional
+from ANAPSID.BlockingOperators.NestedLoopJoin import NestedLoopJoin
+from ANAPSID.BlockingOperators.Union import Union
+from ANAPSID.Decomposer.Tree import Leaf, Node
+from ANAPSID.Decomposer.services import Service, Argument, Triple, Filter, Optional
+from ANAPSID.Decomposer.services import UnionBlock, JoinBlock, Query
+from SPARQLWrapper import SPARQLWrapper, JSON, N3
 import socket
 import urllib
 import string
 import time
 import signal
 import sys, os
-from Decomposer.Tree import Leaf, Node
-from Decomposer.services import Service, Argument, Triple, Filter, Optional
-from Decomposer.services import UnionBlock, JoinBlock, Query
-from SPARQLWrapper import SPARQLWrapper, JSON, N3
 
 def contactSource(server, query, queue, buffersize=16384, limit=-1):
     
