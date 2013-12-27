@@ -1,4 +1,5 @@
 from ply import lex, yacc
+
 from services import Query, Argument, Triple, UnionBlock, JoinBlock, Optional, Filter, Expression, Service
 
 # Lexer
@@ -38,7 +39,9 @@ def t_ID(t):
     t.type = reserved.get(t.value.upper(),'ID')    # Check for reserved words
     return t
 
-t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')"
+t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@[a-z]|[a-z])?" # According to ISO 639-1, lang tags are specified with two letters.
+#t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@en)?"
+#t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')"
 t_VARIABLE = r"([\?]|[\$])([A-Z]|[a-z])\w*"
 t_LKEY = r"\{"
 t_LPAR = r"\("
@@ -196,7 +199,7 @@ def p_rest_union_block_1(p):
 
 def p_join_block(p):
     """
-    join_block : bgp rest_join_block
+    join_block : bgp rest_join_block 
     """
     p[0] = [p[1]] + p[2]
 
@@ -234,13 +237,13 @@ def p_bgp_3(p):
     """
     bgp : LKEY group_graph_pattern RKEY
     """
-    p[0] = p[2]
+    p[0] = p[2]    
 
 def p_bgp_4(p):
     """
     bgp : service
     """
-    p[0] = p[1]
+    p[0] = p[1]   
 
 def p_triple_0(p):
     """
@@ -341,3 +344,4 @@ parser = yacc.yacc(debug=0)
 
 def parse(string):
     return parser.parse(string, lexer=lexer)
+
