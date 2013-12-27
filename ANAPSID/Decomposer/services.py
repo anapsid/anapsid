@@ -1,16 +1,16 @@
 from __future__ import division
+from Tree import Node, Leaf
 import string
 import os
-from Tree import Node, Leaf
-
 
 class Service(object):
 
-    def __init__(self, endpoint, triples):
+    def __init__(self, endpoint, triples, limit=-1):
         endpoint = endpoint[1:len(endpoint)-1]
         self.endpoint = endpoint
         self.triples = triples
         self.filters = []
+        self.limit = limit  # TODO: This arg was added in order to integrate contactSource with incremental calls (16/12/2013)
 
     def include_filter(self, f):
         self.filters.append(f)
@@ -38,7 +38,7 @@ class Service(object):
              new_triples = [t.instantiate(d) for t in self.triples]
         else:
              new_triples = self.triples.instantiate(d)
-        return Service("<"+self.endpoint+">", new_triples)
+        return Service("<"+self.endpoint+">", new_triples, self.limit)
 
     def getTriples(self):
         if isinstance(self.triples, list):
@@ -590,10 +590,11 @@ class Triple(object):
 
     def __hash__(self):
         return hash((self.subject,self.predicate,self.theobject))
-
+    #Modified 17-12-3013. We General predicates are not considered to decide if the triple is selective or not
     def allTriplesLowSelectivity(self):
         return ((not self.predicate.constant)
-                or ((self.isGeneral) and (not self.subject.constant)
+                #or ((self.isGeneral) and (not self.subject.constant)
+                 or ((not self.subject.constant)
                     and (not self.theobject.constant)))
 
     def show(self, x):
