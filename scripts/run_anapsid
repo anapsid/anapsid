@@ -148,7 +148,7 @@ def onSignal1(s, stackframe):
 
 def onSignal2(s, stackframe):
     printInfo()
-    sys.exit()
+    sys.exit(1)
 
 def usage():
     usage_str = ("Usage: {program} -e <endpoints_file> -q <query_file> -b "
