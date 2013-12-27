@@ -23,6 +23,7 @@ class Xproject(object):
         while (not(tuple == "EOF")):
             res = {}
             for var in self.vars:
+                var = var.name[1:]
                 res.update({var:tuple[var]})
             
             self.qresults.put(res)
