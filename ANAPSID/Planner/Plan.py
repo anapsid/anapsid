@@ -39,6 +39,8 @@ import time
 import signal
 import sys, os
 
+endpType = None
+
 def contactSource(server, query, queue, buffersize=16384, limit=-1):
     
     #Contacts the datasource (i.e. real endpoint).
@@ -321,8 +323,10 @@ def contactProxy(server, query, queue, buffersize=16384, limit=50):
     
     return b
 
-def createPlan(query, adaptive, wc, buffersize, c):
-    #print "create Plan: Plan.py 167"
+def createPlan(query, adaptive, wc, buffersize, c, endpointType):
+
+    endpType = endpointType
+
     operatorTree = includePhysicalOperatorsQuery(query, adaptive, wc,
                                                  buffersize, c)
     
