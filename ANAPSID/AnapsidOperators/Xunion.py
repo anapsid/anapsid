@@ -8,7 +8,7 @@ The intermediate results are represented in a queue.
 '''
 from multiprocessing import Queue
 #from collections import Counter
-from Operators.Union import _Union
+from ANAPSID.Operators.Union import _Union
 
 class Xunion(_Union):
 
