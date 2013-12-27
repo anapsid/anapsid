@@ -8,18 +8,16 @@ The intermediate results are represented in a queue.
 '''
 from multiprocessing import Queue
 #from collections import Counter
-from ANAPSID.Operators.Union import _Union
+from Operators.Union import _Union
 
 class Xunion(_Union):
 
-    def __init__(self, vars_left, vars_right, distinct):
+    def __init__(self, vars_left, vars_right):
         self.left       = Queue()
         self.right      = Queue()
-        self.bag        = [] #Counter()
         self.qresults   = Queue()
         self.vars_left  = vars_left
         self.vars_right = vars_right
-        self.distinct   = distinct
 
     def instantiate(self, d):
         newvars_left = self.vars_left - set(d.keys())
@@ -54,11 +52,8 @@ class Xunion(_Union):
             if (not(tuple1 == "EOF")):
                 try:
                     tuple1 = self.left.get(False)
-                    if (not (tuple1 == "EOF")) and (not(self.distinct) or (not (tuple1 in self.bag))):
+                    if (not (tuple1 == "EOF")):
                         self.qresults.put(tuple1)
-                        self.bag.append(tuple1)
-                        #print(tuple1)
-
                 except Exception:
                     # This catch:
                     # Empty: in tuple1 = self.left.get(False), when the queue is empty.
@@ -67,15 +62,9 @@ class Xunion(_Union):
             if (not(tuple2 == "EOF")):
                 try:
                     tuple2 = self.right.get(False)
-                    #print("tuple2: "+str(tuple2))
-                    #print("len-bag: "+str(len(self.bag)))
-                    #print("bag: "+str(self.bag))
-                    #print("c: "+str(tuple2 in self.bag))
-                    #print("type t: "+str(type(tuple2)))
-                    if (not (tuple2 == "EOF")) and (not(self.distinct) or (not(tuple2 in self.bag))):
+                    if (not (tuple2 == "EOF")):
                         self.qresults.put(tuple2)
-                        self.bag.append(tuple2)
-                        #print(tuple2)
+                        
                 except Exception:
                     # This catch:
                     # Empty: in tuple2 = self.right.get(False), when the queue is empty.
@@ -88,6 +77,17 @@ class Xunion(_Union):
         # Initialize tuples.
         tuple1 = None
         tuple2 = None
+        
+        # Initialize empty tuples.
+        v1 = {}
+        v2 = {}
+        
+        # Add empty values to variables of the other argument.
+        for v in self.vars_right:
+            v1.update({v:''})
+            
+        for v in self.vars_left:
+            v2.update({v:''})
 
         # Get the tuples from the queues.
         while (not(tuple1 == "EOF") or not(tuple2 == "EOF")):
@@ -96,18 +96,11 @@ class Xunion(_Union):
             if (not(tuple1 == "EOF")):
                 try:
                     tuple1 = self.left.get(False)
-                    #print("tuple1: "+str(tuple1))
-                    #print("len-bag: "+str(len(self.bag)))
-                    #print("bag: "+str(self.bag))
-                    #print("c: "+str(tuple1 in self.bag))
-                    #print("type t: "+str(type(tuple1)))
-                    if not(self.distinct) or (not(tuple1 in self.bag)):
+                    if (not (tuple1 == "EOF")):
                         res = {}
-                        for v in self.vars_right:
-                            res.update({v:''})
+                        res.update(v1)
                         res.update(tuple1)
                         self.qresults.put(res)
-                        self.bag.append(tuple1)
                         #print(tuple1)
                 except Exception:
                     # This catch:
@@ -118,18 +111,11 @@ class Xunion(_Union):
             if (not(tuple2 == "EOF")):
                 try:
                     tuple2 = self.right.get(False)
-                    #print("tuple2: "+str(tuple2))
-                    #print("len-bag: "+str(len(self.bag)))
-                    #print("bag: "+str(self.bag))
-                    #print("c: "+str(tuple2 in self.bag))
-                    #print("type t: "+str(type(tuple2)))
-                    if not(self.distinct) or (not(tuple2 in self.bag)):
+                    if (not (tuple2 == "EOF")):
                         res = {}
-                        for v in self.vars_left:
-                            res.update({v:''})
+                        res.update(v2)
                         res.update(tuple2)
                         self.qresults.put(res)
-                        self.bag.append(tuple2)
                         #print(tuple2)
                 except Exception:
                     # This catch:
