@@ -86,7 +86,7 @@ def runQuery(query_file, endpoint_file, buffer_size, simulated, res,
              os.kill(p3.pid, 12)
            except OSError as ex:
              continue
-         #  print 'ft'
+           print 'ft'
            break
         elif p2.is_alive() and not p3.is_alive():
            try:
@@ -127,7 +127,7 @@ def conclude(res, p2):
         ri = res.get(True)
         #print ri
     printInfo()
-    sys.exit(0)
+    
     
 def printInfo():
     global tn
