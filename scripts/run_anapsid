@@ -127,7 +127,8 @@ def conclude(res, p2):
         ri = res.get(True)
         #print ri
     printInfo()
-
+    sys.exit(0)
+    
 def printInfo():
     global tn
     if tn == -1:
@@ -137,7 +138,7 @@ def printInfo():
     print l
 
 def onSignal1(s, stackframe):
-    print 'entre en Signal1'
+    #print 'entre en Signal1'
     cs = active_children()
     for c in cs:
       try:
