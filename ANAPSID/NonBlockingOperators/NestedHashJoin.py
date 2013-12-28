@@ -58,8 +58,9 @@ class NestedHashJoin(Join):
                         resource = self.getResource(tuple1)
                         queue = Queue()
                         right_queues[resource] = queue
-                        p2 = Process(target=new_right_operator.execute, args=(queue,))
-                        p2.start()
+                        new_right_operator.execute(queue)
+                        #p2 = Process(target=new_right_operator.execute, args=(queue,))
+                        #p2.start()
                 except Empty:
                     pass
                 except TypeError:
