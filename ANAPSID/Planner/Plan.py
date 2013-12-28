@@ -656,6 +656,8 @@ class IndependentOperator(object):
             # Check if there's no more data.
             if (res == "EOF"):
                 break
+                
+        self.p.terminate()
 
     def __repr__(self):
         return str(self.tree)
@@ -759,6 +761,8 @@ class DependentOperator(object):
                         # Check if there's no more data.
                         if (res == "EOF"):
                             break
+                            
+                    self.p.terminate()
 
                 except ValueError:
                     # The source shouldn't be contacted.

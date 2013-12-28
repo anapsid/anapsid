@@ -65,6 +65,8 @@ class NestedHashOptional(Optional):
                         resource = self.getResource(tuple1)
                         queue = Queue()
                         right_queues[resource] = queue
+                        #print "new_right_operator.__class__", new_right_operator.__class__
+                        #print "new_right_operator.left.__class__", new_right_operator.left.__class__
                         new_right_operator.execute(queue)
                         #p2 = Process(target=new_right_operator.execute, args=(queue,))
                         #p2.start()

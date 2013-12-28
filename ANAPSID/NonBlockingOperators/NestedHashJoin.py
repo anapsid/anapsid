@@ -58,6 +58,8 @@ class NestedHashJoin(Join):
                         resource = self.getResource(tuple1)
                         queue = Queue()
                         right_queues[resource] = queue
+                        #print "new_right_operator.__class__", new_right_operator.__class__
+                        #print "new_right_operator.left.__class__", new_right_operator.left.__class__
                         new_right_operator.execute(queue)
                         #p2 = Process(target=new_right_operator.execute, args=(queue,))
                         #p2.start()
@@ -66,9 +68,9 @@ class NestedHashJoin(Join):
                 except TypeError:
                     # TypeError: in resource = resource + tuple[var], when the tuple is "EOF".
                     pass
-                except:
-                    print "Unexpected error:", sys.exc_info()[0]
-                    #raise
+                except Exception as e:
+                    #print "Unexpected error:", sys.exc_info()[0]
+                    print e
                     pass
 
             toRemove = [] # stores the queues that have already received all its tuples
