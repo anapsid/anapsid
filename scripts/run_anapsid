@@ -166,7 +166,7 @@ def usage():
 
 def get_options(argv):
     try:
-        opts, args = getopt.getopt(argv, "h:e:q:b:s:p:o:d:a:k:w:t")
+        opts, args = getopt.getopt(argv, "h:e:q:b:s:p:o:d:a:k:w:t:")
     except getopt.GetoptError:
         usage()
         sys.exit(1)
