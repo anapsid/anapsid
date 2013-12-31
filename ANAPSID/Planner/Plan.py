@@ -663,9 +663,7 @@ class IndependentOperator(object):
         return str(self.tree)
 
 def askCount(query, tree, vars, contact):
-
-    (server, query) = tree.getCount(query, vars)
-#    print "queryCount" + query
+    (server, query) = tree.getCount(query, vars, endpType)
     q = Queue()
     b = contact(server, query, q)
 
