@@ -102,7 +102,7 @@ def contactSource(server, query, queue, buffersize=16384, limit=-1):
             query_copy = query + " LIMIT " + str(limit) + " OFFSET " + str(offset)
             sparql.setQuery(query_copy)
             sparql.setReturnFormat(JSON)
-        
+            
             try:
                 res = sparql.query()
             except Exception as e:
@@ -637,7 +637,10 @@ class IndependentOperator(object):
         return self.tree.aux(n)
 
     def execute(self, outputqueue):
-        
+    
+    if (self.tree.service.limit == -1) and (self.constantPercentage() <= 0.5):
+            self.tree.service.limit=10000 # Fixed value, this can be learnt in the future
+                
 	# Evaluate the independent operator.
         self.q = None
         self.q = Queue()
