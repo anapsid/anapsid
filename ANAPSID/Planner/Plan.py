@@ -638,8 +638,8 @@ class IndependentOperator(object):
 
     def execute(self, outputqueue):
     
-    if (self.tree.service.limit == -1) and (self.constantPercentage() <= 0.5):
-        self.tree.service.limit=10000 # Fixed value, this can be learnt in the future
+        if (self.tree.service.limit == -1) and (self.constantPercentage() <= 0.5):
+            self.tree.service.limit=10000 # Fixed value, this can be learnt in the future
                 
 	# Evaluate the independent operator.
         self.q = None
