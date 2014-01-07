@@ -1,0 +1,6 @@
+select distinct ?genre1 ?genre2
+where {
+?a1 <http://dbpedia.org/ontology/associatedMusicalArtist> ?a2.
+?a2 <http://dbpedia.org/ontology/genre> ?genre1.
+?a1 <http://dbpedia.org/ontology/genre> ?genre2.
+}
