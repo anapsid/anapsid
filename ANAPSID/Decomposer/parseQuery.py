@@ -41,8 +41,8 @@ def t_ID(t):
     t.type = reserved.get(t.value.upper(),'ID')    # Check for reserved words
     return t
 
-t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@[a-z]|[a-z])?" # According to ISO 639-1, lang tags are specified with two letters.
-#t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@en)?"
+#t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@[a-z]|[a-z])?" #According to ISO 639-1, lang tags are specified with two letters.
+t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@en)?"
 t_VARIABLE = r"([\?]|[\$])([A-Z]|[a-z])\w*"
 t_LKEY = r"\{"
 t_LPAR = r"\("
