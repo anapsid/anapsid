@@ -1,0 +1,19 @@
+select distinct * 
+where {
+?d1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/class/yago/Antibody115027189>.
+?d1 <http://purl.org/dc/terms/subject> ?o1.
+?d1 <http://dbpedia.org/property/rnaType> ?rnt1.
+?rnt1 <http://www.w3.org/2002/07/owl#sameAs> ?sa1.
+?rnt1 <http://purl.org/dc/terms/subject> ?su1.
+?rnt1 <http://xmlns.com/foaf/0.1/isPrimaryTopicOf> ?pmt1.
+?rnt1 <http://dbpedia.org/ontology/wikiPageExternalLink> ?wpe1.
+?rnt1 <http://www.w3.org/ns/prov#wasDerivedFrom> ?wdf1.
+?rnt1 <http://dbpedia.org/property/hasPhotoCollection> ?hpc1.
+?d1 <http://dbpedia.org/property/taxDomain> ?o.
+?o <http://dbpedia.org/property/align> ?o2.
+?o <http://xmlns.com/foaf/0.1/depiction> ?de.
+?o <http://dbpedia.org/ontology/thumbnail> ?tb.
+?o <http://dbpedia.org/property/color> ?c1
+}
+
+                

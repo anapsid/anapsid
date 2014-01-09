@@ -1,0 +1,14 @@
+select distinct *
+where {
+?p <http://dbpedia.org/property/musicalguests> <http://dbpedia.org/resource/Mark_Anthony>.
+?p <http://dbpedia.org/property/guests> ?p5.
+?p <http://dbpedia.org/property/sketches> ?o5.
+?p5 <http://dbpedia.org/property/awards> ?p6.
+?p5 <http://dbpedia.org/ontology/associate> <http://dbpedia.org/resource/Jeff_Flake>.
+?p5 <http://www.w3.org/ns/prov#wasDerivedFrom> ?o1.
+?p5 <http://dbpedia.org/ontology/successor> ?o2.
+?o2 <http://dbpedia.org/ontology/birthName> ?o4.
+?o2 <http://dbpedia.org/ontology/birthPlace> ?o6.
+?o2 <http://dbpedia.org/property/hasPhotoCollection> ?o7.
+?o2 <http://dbpedia.org/ontology/individualisedPnd> ?o8
+}

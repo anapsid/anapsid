@@ -1,0 +1,15 @@
+select  distinct *
+where {
+?p1 <http://dbpedia.org/ontology/associatedMusicalArtist> <http://dbpedia.org/resource/Juan_Luis_Guerra>.
+?p2 <http://dbpedia.org/ontology/associatedMusicalArtist> <http://dbpedia.org/resource/Enrique_Iglesias>.
+?p1  <http://dbpedia.org/property/instrument> ?o4.
+?p2 <http://dbpedia.org/property/occupation> ?o4.
+?p2 <http://dbpedia.org/ontology/associatedBand> ?p3.
+?p3 <http://dbpedia.org/ontology/formerBandMember> ?o1.
+?mg1 <http://dbpedia.org/property/musicalguests> ?p3.
+?mc1 <http://dbpedia.org/ontology/musicComposer> ?p3.
+?mc1 <http://dbpedia.org/ontology/musicComposer> ?d1.
+?d1 <http://dbpedia.org/ontology/instrument> ?o.
+?o <http://dbpedia.org/property/hornbostelSachs> ?o2.
+?o <http://www.w3.org/ns/prov#wasDerivedFrom> ?o3
+}

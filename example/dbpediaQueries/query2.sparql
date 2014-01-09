@@ -1,0 +1,32 @@
+select distinct ?o 
+where {
+ ?d1 <http://purl.org/dc/terms/subject> <http://dbpedia.org/resource/Category:Aminoglycoside_antibiotics>.
+ ?d2 <http://purl.org/dc/terms/subject> <http://dbpedia.org/resource/Category:Toxicology>.
+ ?d1 <http://dbpedia.org/property/routesOfAdministration> ?o.
+ ?d2 <http://dbpedia.org/property/routesOfAdministration> ?o.
+ ?d1 <http://dbpedia.org/ontology/chEBI> ?c1.
+ ?d1 <http://dbpedia.org/property/proteinBound> ?p1.
+ ?d2 <http://dbpedia.org/ontology/chEBI> ?c2.
+ ?d2 <http://dbpedia.org/property/proteinBound> ?p2.
+ OPTIONAL {
+ ?d1 <http://dbpedia.org/property/unii> ?u1.
+ ?d1 <http://dbpedia.org/property/stdinchikey> ?s1.
+ ?d1 <http://dbpedia.org/property/smiles> ?sm1.
+ ?d1 <http://dbpedia.org/property/pubchem> ?pu1.
+ ?d1 <http://dbpedia.org/property/molecularWeight> ?m1.
+ ?d1 <http://dbpedia.org/property/kegg> ?k1.
+ ?d1 <http://dbpedia.org/property/excretion> ?e1.
+ ?d1 <http://dbpedia.org/property/drugbank> ?dg1. 
+}.
+ OPTIONAL {
+?d2 <http://dbpedia.org/property/unii> ?u2.
+ ?d2 <http://dbpedia.org/property/stdinchikey> ?s2.
+ ?d2 <http://dbpedia.org/property/smiles> ?sm2.
+ ?d2 <http://dbpedia.org/property/pubchem> ?pu2.
+ ?d2 <http://dbpedia.org/property/molecularWeight> ?m2.
+ ?d2 <http://dbpedia.org/property/kegg> ?k2.
+ ?d2 <http://dbpedia.org/property/excretion> ?e2.
+ ?d2 <http://dbpedia.org/property/drugbank> ?dg2.
+}
+}
+                

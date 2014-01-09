@@ -1,0 +1,7 @@
+select distinct ?o
+where {
+?d1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/class/yago/Antibody115027189>.
+?d2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://dbpedia.org/class/yago/MonoclonalAntibody115029781>.
+?d1 <http://dbpedia.org/ontology/atcPrefix> ?o.
+?d2 <http://dbpedia.org/ontology/atcPrefix> ?o.
+} 

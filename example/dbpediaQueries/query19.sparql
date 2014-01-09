@@ -1,0 +1,13 @@
+select distinct *
+where {
+?d1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://umbel.org/umbel/rc/AilmentCondition>.
+?d2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/Disease>.
+?d1 <http://purl.org/dc/terms/subject> ?o.
+?d2 <http://purl.org/dc/terms/subject> ?o.
+?d1 <http://dbpedia.org/ontology/medlineplus> ?m1.
+?d2 <http://dbpedia.org/ontology/medlineplus> ?m2.
+ OPTIONAL {
+ ?d1 <http://dbpedia.org/ontology/meshId> ?ms1.
+ ?d1 <http://dbpedia.org/ontology/omim> ?o1.
+}
+} 

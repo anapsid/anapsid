@@ -191,12 +191,12 @@ class Leaf(Tree):
 
     def getInfoIO(self, query):
         subquery = self.service.getTriples()
-        vs = self.service.getVars()
+        vs = list(set(self.service.getVars()))
         variables = [string.lstrip(string.lstrip(v, "?"), "$") for v in vs]
         if query.args == []:
             projvars = vs
         else:
-            projvars = [v.name for v in query.args if not v.constant]
+            projvars = list(set([v.name for v in query.args if not v.constant]))
         subvars = list((query.join_vars | set(projvars)) & set(vs))
         
         if subvars == []:

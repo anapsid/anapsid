@@ -1,0 +1,20 @@
+select distinct ?p
+where {
+?p <http://dbpedia.org/property/associatedActs> <http://dbpedia.org/resource/Juan_Luis_Guerra>.
+?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t1. 
+?p <http://purl.org/dc/terms/subject> ?ss1.
+?p <http://dbpedia.org/ontology/activeYearsStartYear> ?ac1.
+?p <http://dbpedia.org/ontology/associatedBand> ?ab1.
+?p <http://dbpedia.org/ontology/associatedMusicalArtist> ?ama1.
+?p <http://dbpedia.org/property/alternativeNames> ?altN1.
+?p <http://dbpedia.org/property/associatedActs> ?aa1.
+?ama1 <http://dbpedia.org/ontology/activeYearsEndYear> ?aye1.
+?ama1 <http://dbpedia.org/ontology/activeYearsStartYear> ?ays1.
+?ama1 <http://dbpedia.org/ontology/background> ?bg1.
+?ab1 <http://xmlns.com/foaf/0.1/homepage> ?hm1.
+?ab1 <http://xmlns.com/foaf/0.1/isPrimaryTopicOf> ?iPt1.
+?ab1 <http://www.w3.org/ns/prov#wasDerivedFrom> ?wd1.
+?ab1 <http://dbpedia.org/property/hasPhotoCollection> ?yA1.
+?aa1 <http://dbpedia.org/ontology/activeYearsEndYear> ?aye2.
+?aa1 <http://dbpedia.org/ontology/activeYearsStartYear> ?ays2.
+}
