@@ -102,17 +102,14 @@ class NestedHashOptional(Optional):
                 del right_queues[r]
 
 
-        # This is the optional: Produce tuples that haven't matched already.
-        res_right = {}
-        for var in self.vars_right:
-            res_right.update({var:''})
-
-        #print "self.bag", self.bag
+        # This is the optional: Produce tuples that haven't matched already.    
         for tuple in self.bag:
-            res = {}
-            res.update(res_right)
+            res_right = {}
+            for var in self.vars_right:
+                res_right.update({var:''})
+            res = res_right
             res.update(tuple)
-            self.qresults.put(tuple)
+            self.qresults.put(res)
 
         # Put EOF in queue and exit. 
         self.qresults.put("EOF")

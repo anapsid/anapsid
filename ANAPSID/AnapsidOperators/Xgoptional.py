@@ -100,10 +100,10 @@ class Xgoptional(Optional):
         # Stage 3: When both sources sent all the data.
 
         # This is the optional: Produce tuples that haven't matched already.
-        res_right = {}
-        for var in self.vars_right:
-            res_right.update({var:''})
         for tuple in self.bag:
+            res_right = {}
+            for var in self.vars_right:
+                res_right.update({var:''})
             res = res_right
             res.update(tuple)
             self.qresults.put(res)
