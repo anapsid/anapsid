@@ -504,19 +504,18 @@ def includePhysicalOperatorJoin(a, wc, l, r):
                 n.left.tree.service.limit = 10000 # Fixed value, this can be learnt in the future 
                 #print "modifying limit left ..."   
 
-        if isinstance(n.right, IndependentOperator) and isinstance(n.right.tree, Leaf):
-            if not(dependent_join):
-                if (n.right.constantPercentage() <= 0.5):
-                    n.right.tree.service.limit = 10000 # Fixed value, this can be learnt in the future
+    if isinstance(n.right, IndependentOperator) and isinstance(n.right.tree, Leaf):
+        if not(dependent_join):
+            if (n.right.constantPercentage() <= 0.5):
+                n.right.tree.service.limit = 10000 # Fixed value, this can be learnt in the future
                     #print "modifying limit right ..."
-            else:
-                new_constants = 0
-                for v in join_variables:
-                    new_constants = new_constants + n.right.query.show().count(v)
-                if ((n.right.constantNumber() + new_constants)/n.right.places() <= 0.5):
-                    n.right.tree.service.limit = 10000 # Fixed value, this can be learnt in the future
-                    #print "modifying limit right ..."
-            
+        else:
+            new_constants = 0
+            for v in join_variables:
+                new_constants = new_constants + n.right.query.show().count(v)
+            if ((n.right.constantNumber() + new_constants)/n.right.places() <= 0.5):
+                n.right.tree.service.limit = 10000 # Fixed value, this can be learnt in the future
+                #print "modifying limit right ..."
      
     else:
         n =  TreePlan(HashJoin(join_variables), all_variables, l, r)
