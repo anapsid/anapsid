@@ -385,13 +385,13 @@ def includePhysicalOperatorsOptional(left, rightList, a):
 
             dependent_op = False
             # Case 1: left operator is highly selective and right operator is low selective
-            if not(lowSelectivityLeft) and lowSelectivityRight and isinstance(right, Leaf):
+            if not(lowSelectivityLeft) and lowSelectivityRight and not(isinstance(right, TreePlan)):
                 l = TreePlan(NestedHashOptional(left.vars, right.vars), all_variables, l, right)
                 dependent_op = True
                 #print "Planner CASE 1: nested optional"
 
             # Case 2: left operator is low selective and right operator is highly selective
-            elif lowSelectivityLeft and not(lowSelectivityRight) and isinstance(right, Leaf):
+            elif lowSelectivityLeft and not(lowSelectivityRight) and not(isinstance(right, TreePlan)):
                 l = TreePlan(NestedHashOptional(left.vars, right.vars), all_variables, right, l)
                 dependent_op = True
                 #print "Planner CASE 2: nested loop optional swapping plan"
@@ -484,13 +484,13 @@ def includePhysicalOperatorJoin(a, wc, l, r):
         dependent_join = False
         #if (noInstantiatedRightStar) or ((not wc) and (l.constantPercentage() >= 0.5) and (len(join_variables) > 0) and c):
         # Case 1: left operator is highly selective and right operator is low selective
-	if not(lowSelectivityLeft) and lowSelectivityRight and isinstance(r, Leaf):
+	if not(lowSelectivityLeft) and lowSelectivityRight and not(isinstance(r, TreePlan)):
             n = TreePlan(NestedHashJoin(join_variables), all_variables, l, r)
             dependent_join = True
             #print "Planner CASE 1: nested loop"
 	
         # Case 2: left operator is low selective and right operator is highly selective
-	elif lowSelectivityLeft and not(lowSelectivityRight) and isinstance(r, Leaf):
+	elif lowSelectivityLeft and not(lowSelectivityRight) and not(isinstance(r, TreePlan)):
 	    n = TreePlan(NestedHashJoin(join_variables), all_variables, r, l)
             dependent_join = True
             #print "Planner CASE 2: nested loop swapping plan"	
