@@ -177,4 +177,7 @@ class NestedHashOptional(Optional):
                     self.bag.remove(t.tuple)
                 except ValueError:
                     pass
-        table2.get(resource, []).append(record)
+                    
+        p = table2.get(resource, [])
+        p.append(record) 
+        table2[resource] = p

@@ -143,4 +143,6 @@ class NestedHashJoin(Join):
                 x = t.tuple.copy()
                 x.update(tuple)
                 self.qresults.put(x)
-        table2.get(r, []).append(record)
+        p = table2.get(resource, [])
+        p.append(record) 
+        table2[resource] = p
