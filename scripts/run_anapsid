@@ -81,13 +81,13 @@ def runQuery(query_file, endpoint_file, buffer_size, simulated, res,
     signal.signal(12, onSignal1)
 
     while True:
-        if not p2.is_alive() and p3.is_alive():
-           try:
-             os.kill(p3.pid, 9)
-           except OSError as ex:
-             continue
-           break
-        elif p2.is_alive() and not p3.is_alive():
+        #if not p2.is_alive() and p3.is_alive():
+        #   try:
+        #     os.kill(p3.pid, 9)
+        #   except OSError as ex:
+        #     continue
+        #   break
+        if p2.is_alive() and not p3.is_alive():
            try:
              os.kill(p2.pid, 9)
            except Exception as ex:
