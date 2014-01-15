@@ -70,7 +70,7 @@ def contactSource(server, query, queue, buffersize=16384, limit=-1):
             if 'results' in res:
                 for x in res['results']['bindings']:
                     for key, props in x.iteritems():
-                        x[key] = props['value']
+                        x[key] = props['value'].encode("utf-8")
 
                 reslist = res['results']['bindings']
 
@@ -118,7 +118,7 @@ def contactSource(server, query, queue, buffersize=16384, limit=-1):
                 if 'results' in res:
                     for x in res['results']['bindings']:
                         for key, props in x.iteritems():
-                            x[key] = props['value']
+                            x[key] = props['value'].encode("utf-8")
 
                     reslist = res['results']['bindings']
 
