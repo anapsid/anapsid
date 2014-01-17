@@ -590,7 +590,7 @@ class Triple(object):
 
     def __hash__(self):
         return hash((self.subject,self.predicate,self.theobject))
-    #Modified 17-12-3013. We General predicates are not considered to decide if the triple is selective or not
+    #Modified 17-12-2013. General predicates are not considered to decide if the triple is selective or not
     def allTriplesLowSelectivity(self):
         return ((not self.predicate.constant)
                 #or ((self.isGeneral) and (not self.subject.constant)
