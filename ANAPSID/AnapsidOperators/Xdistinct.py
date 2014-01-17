@@ -14,7 +14,7 @@ class Xdistinct(object):
         #self.input       = Queue()
         self.qresults   = Queue()
         self.vars  = vars
-        self.bag = []
+        self.bag = {} 
         
     def execute(self, left, dummy, out):
         # Executes the Xdistinct.
@@ -23,9 +23,12 @@ class Xdistinct(object):
         tuple = self.left.get(True)
         
         while (not(tuple == "EOF")):
-            if not(tuple in self.bag):
+            str_tuple = str(sorted(tuple.items()))
+            get = self.bag.get(str_tuple, False)
+            
+            if not(get):
                 self.qresults.put(tuple)
-                self.bag.append(tuple)
+                self.bag.update({str_tuple : True})
             tuple = self.left.get(True)
             
         # Put EOF in queue and exit. 
