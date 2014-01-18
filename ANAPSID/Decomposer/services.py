@@ -28,7 +28,7 @@ class Service(object):
         a = True
         if isinstance(self.triples, list):
             for t in self.triples:
-                a = a and t.allTriplesLowSelectivity()
+                a = a and t.allTriplesLowSelectivity() 
         else:
             a = self.triples.allTriplesLowSelectivity()
         return a
@@ -75,6 +75,15 @@ class Service(object):
                 l = l + t.getVars()
         else:
             l = self.triples.getVars()
+        return l
+
+    def getPredVars(self):
+        if isinstance(self.triples, list):
+            l = []
+            for t in self.triples:
+                l = l + t.getPredVars()        
+        else:
+            l = self.triples.getPredVars()    
         return l
 
     def places(self):
@@ -607,6 +616,13 @@ class Triple(object):
             l.append(self.subject.name)
         if not self.theobject.constant:
             l.append(self.theobject.name)
+        return l
+    
+    def getPredVars(self):
+
+        l = []
+        if not self.predicate.constant:
+            l.append(self.predicate.name)
         return l
 
     def places(self):

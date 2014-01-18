@@ -192,6 +192,7 @@ class Leaf(Tree):
     def getInfoIO(self, query):
         subquery = self.service.getTriples()
         vs = list(set(self.service.getVars()))
+        predictVar=set(self.service.getPredVars())
         variables = [string.lstrip(string.lstrip(v, "?"), "$") for v in vs]
         if query.args == []:
             projvars = vs
@@ -201,7 +202,8 @@ class Leaf(Tree):
         
         if subvars == []:
           subvars=vs
-
+        subvars = list(set(subvars) | predictVar)
+        
         # This corresponds to the case when the subquery is the same as the original query.
         # In this case, we project the variables of the original query.
         if query.body.show(" ").count("SERVICE") == 1:
