@@ -22,7 +22,14 @@ class Xunion(_Union):
     def instantiate(self, d):
         newvars_left = self.vars_left - set(d.keys())
         newvars_right = self.vars_right - set(d.keys())
-        return Xunion(newvars_left, newvars_right, self.distinct)
+        #return Xunion(newvars_left, newvars_right, self.distinct)
+        return Xunion(newvars_left, newvars_right)
+
+    def instantiateFilter(self, instantiated_vars, filter_str):
+        newvars_left = self.vars_left - set(instantiated_vars)
+        newvars_right = self.vars_right - set(instantiated_vars)
+        return Xunion(newvars_left, newvars_right)
+
 
     def execute(self, left, right, out):
         # Executes the Xunion.
