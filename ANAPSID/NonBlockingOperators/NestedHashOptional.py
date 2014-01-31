@@ -128,6 +128,8 @@ class NestedHashOptional(Optional):
             v = tuple[var]
             if string.find(v, "http") == 0: # uris must be passed between < .. >
                 v = "<"+v+">"
+            else:
+                v = '"'+v+'"'
             d[var] = v
         #print "d", d
         #print 'type(operator) in makeInstantiation in Nested Optiional', type(operator)
