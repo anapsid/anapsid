@@ -24,6 +24,7 @@ class NestedHashJoin(Join):
         self.right_table = dict()
         self.qresults    = Queue()
         self.vars        = vars
+        
 
     def instantiate(self, d):
         newvars = self.vars - set(d.keys())
@@ -34,10 +35,9 @@ class NestedHashJoin(Join):
         self.left_queue = left_queue
         self.right_operator = right_operator
         self.qresults = out
-
+        #print "right_operator", right_operator
         tuple1 = None
         tuple2 = None
-
         right_queues = dict()
 
         while (not(tuple1 == "EOF") or (len(right_queues) > 0)):
@@ -79,6 +79,7 @@ class NestedHashJoin(Join):
                 try:
                     q = right_queues[r]
                     tuple2 = q.get(False)
+                    #print "tuple2", tuple2
                     if (tuple2 == "EOF"):
                         toRemove.append(r)
                     else:
@@ -109,8 +110,9 @@ class NestedHashJoin(Join):
             v = tuple[var]
             if string.find(v, "http") == 0: # uris must be passed between < .. >
                 v = "<"+v+">"
+            else:
+                v = '"'+v+'"'
             d[var] = v
-        #print type(operator)
         new_operator = operator.instantiate(d)
         return new_operator
 
