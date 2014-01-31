@@ -12,6 +12,10 @@ class Tree(object):
     def instantiate(self, d):
         return
 
+    @abc.abstractmethod
+    def instantiateFilter(self, d, filter_str):
+        return
+
     def degree(self):
         return getDegree(self.vars, self.dict)
 
@@ -78,6 +82,9 @@ class Node(Tree):
 
     def instantiate(self, d):
         return Node(self.left.instantiate(d), self.right.instantiate(d))
+
+    def instantiateFilter(self, d, filter_str):
+        return Node(self.left.instantiateFilter(d, filter_str), self.right.instantiateFilter(d, filter_str))
 
     def __eq__(self, other):
         return ((isinstance(other, Node)) and (self.vars == other.vars) and 
@@ -177,6 +184,15 @@ class Leaf(Tree):
                 del newdict[c]
         return Leaf(self.service.instantiate(d), newvars, newdict)
 
+    def instantiateFilter(self, d, filter_str):
+        newvars = self.vars - set(d)
+        newdict = self.dict.copy()
+        for c in d:
+            if c in newdict:
+                del newdict[c]
+        return Leaf(self.service.instantiateFilter(d, filter_str), newvars, newdict)
+
+
     def aux(self, n):
         return self.service.show(n)
 
@@ -191,7 +207,8 @@ class Leaf(Tree):
 
     def getInfoIO(self, query):
         subquery = self.service.getTriples()
-        vs = list(set(self.service.getVars()))
+        vs = list(set(self.service.getVars()))# - set(self.service.filters_vars)) # Modified this by mac: 31-01-2014
+        #print "servuce", vs, self.service.filters_vars
         predictVar=set(self.service.getPredVars())
         variables = [string.lstrip(string.lstrip(v, "?"), "$") for v in vs]
         if query.args == []:
@@ -214,7 +231,7 @@ class Leaf(Tree):
             d = "DISTINCT "
         else:
             d = ""
-        subquery = "SELECT "+d+ subvars + " WHERE {" + subquery + "}"
+        subquery = "SELECT "+d+ subvars + " WHERE {" + subquery + "\n" + query.filter_nested + "\n}"
         return (self.service.endpoint, query.getPrefixes()+subquery, set(variables))
 
     def getCount(self, query, vars, endpointType):
@@ -239,9 +256,9 @@ class Leaf(Tree):
 
         d = "DISTINCT "
         if (endpointType=="V"):
-             subquery = "SELECT COUNT "+d+ vars_str + "  WHERE {" + subquery + "}"
+             subquery = "SELECT COUNT "+d+ vars_str + "  WHERE {" + subquery + "\n"+ query.filter_nested +"}"
         else:
-            subquery = "SELECT ( COUNT ("+d+ vars_str + ") AS ?cnt)  WHERE {" + subquery + "}"
+            subquery = "SELECT ( COUNT ("+d+ vars_str + ") AS ?cnt)  WHERE {" + subquery +"\n"+ query.filter_nested + "}"
         return (self.service.endpoint, query.getPrefixes()+subquery)
 
     def getVars(self):
