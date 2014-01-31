@@ -21,7 +21,7 @@ from ANAPSID.Planner.Plan import contactSource, contactProxy
 from ANAPSID.Decomposer import decomposer
 
 def runQuery(query_file, endpoint_file, buffer_size, simulated, res,
-             decomposition, p, oo, a, wc, k, endpointType):
+             decomposition, p, oo, a, wc, k, endpointType, printResults):
     if simulated:
         contact = contactProxy
     else:
@@ -76,7 +76,7 @@ def runQuery(query_file, endpoint_file, buffer_size, simulated, res,
     #print 'creando procesos'
     p2 = Process(target=plan.execute, args=(res,))
     p2.start()
-    p3 = Process(target=conclude, args=(res,p2))
+    p3 = Process(target=conclude, args=(res,p2, printResults))
     p3.start()
     signal.signal(12, onSignal1)
 
@@ -96,34 +96,51 @@ def runQuery(query_file, endpoint_file, buffer_size, simulated, res,
         elif not p2.is_alive() and not p3.is_alive():
            break
 
-def conclude(res, p2):
+def conclude(res, p2, printResults):
     signal.signal(12, onSignal2)
     global t1
     global tn
     global c1
     global cn
     ri = res.get()
-
-    if (ri == "EOF"):
-       time2 = time() - time1
-       t1 = time2
-       tn = time2
-       printInfo()
-       return
-
-    while (ri != "EOF"):
-
-        cn = cn + 1
-        if cn == 1:
-            time2=time() - time1
+    
+    if (printResults):
+        if (ri == "EOF"):
+            time2 = time() - time1
             t1 = time2
-            c1 = 1
-        #time2 = time()
-        #print time2 - time1, ri
-        #print ri
-        ri = res.get(True)
-        #print ri
-    printInfo()
+            tn = time2
+            print "Empty set." 
+            printInfo()
+            return
+
+        while (ri != "EOF"):
+            cn = cn + 1
+            if cn == 1:
+                time2=time() - time1
+                t1 = time2
+                c1 = 1
+            print ri
+            ri = res.get(True)
+        printInfo()
+
+    else:
+        if (ri == "EOF"):
+            time2 = time() - time1
+            t1 = time2
+            tn = time2
+            print "Empty set."
+            printInfo()
+            return
+
+        while (ri != "EOF"):
+            cn = cn + 1
+            if cn == 1:
+                time2=time() - time1
+                t1 = time2
+                c1 = 1
+            #print ri
+            ri = res.get(True)
+        printInfo()
     
     
 def printInfo():
@@ -166,7 +183,7 @@ def usage():
 
 def get_options(argv):
     try:
-        opts, args = getopt.getopt(argv, "h:e:q:b:s:p:o:d:a:k:w:t:")
+        opts, args = getopt.getopt(argv, "h:e:q:b:s:p:o:d:a:k:w:t:r:")
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -182,6 +199,7 @@ def get_options(argv):
     withoutCounts = False
     k = "n"
     endpointType = 'V'
+    printResults = False
 
     for opt, arg in opts:
         if opt == "-h":
@@ -209,12 +227,14 @@ def get_options(argv):
             withoutCounts = arg == "True"
         elif opt == '-t':
             endpointType = arg
+        elif opt == '-r':
+            printResults = eval(arg)
 
     if (not endpointfile and not one_point_one) or not queryfile:
         usage()
         sys.exit(1)
     return (endpointfile, queryfile, buffersize, simulated,
-            decomposition, plan, one_point_one, adaptive, withoutCounts, k, endpointType)
+            decomposition, plan, one_point_one, adaptive, withoutCounts, k, endpointType, printResults)
 
 def main(argv):
     # manager = Manager()
@@ -222,10 +242,10 @@ def main(argv):
     res = Queue()
     time1 = time()
     (endpoint, query, buffersize, simulated,
-     decomposition, plan, oo, a, wc, k, endpointType)          = get_options(argv[1:])
+     decomposition, plan, oo, a, wc, k, endpointType, printResults) = get_options(argv[1:])
     try:
        runQuery(query, endpoint, buffersize, simulated, res,
-             decomposition, plan, oo, a, wc, k, endpointType)
+             decomposition, plan, oo, a, wc, k, endpointType, printResults)
     except Exception as ex:
        print ex
 
