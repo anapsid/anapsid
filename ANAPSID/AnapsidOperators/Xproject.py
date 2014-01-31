@@ -24,7 +24,8 @@ class Xproject(object):
             res = {}
             for var in self.vars:
                 var = var.name[1:]
-                res.update({var:tuple[var]})
+                aux = tuple.get(var, '')
+                res.update({var:aux})
             
             self.qresults.put(res)
             tuple = self.left.get(True)
