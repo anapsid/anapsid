@@ -5,12 +5,14 @@ import os
 
 class Service(object):
 
-    def __init__(self, endpoint, triples, limit=-1):
+    def __init__(self, endpoint, triples, limit=-1, filter_nested=[]):
         endpoint = endpoint[1:len(endpoint)-1]
         self.endpoint = endpoint
         self.triples = triples
-        self.filters = []
+        self.filters = []    
+        self.filter_nested = filter_nested# TODO: this is used to store the filters from NestedLoop operators
         self.limit = limit  # TODO: This arg was added in order to integrate contactSource with incremental calls (16/12/2013)
+        #self.filters_vars = set(filter_vars)
 
     def include_filter(self, f):
         self.filters.append(f)
@@ -20,9 +22,18 @@ class Service(object):
             triples_str = " . ".join(map(str, self.triples))
         else:
             triples_str = str(self.triples)
-        filters_str = " . ".join(map(str, self.filters))
+        filters_str = " . ".join(map(str, self.filters)) + " \n".join(map(str, self.filter_nested))
         return ("\n    { SERVICE <" + self.endpoint + "> { "
                 + triples_str + filters_str + " } \n    }")
+
+    def allTriplesGeneral(self):
+        a = True
+        if isinstance(self.triples, list):
+            for t in self.triples:
+                a = a and t.allTriplesGeneral()
+        else:
+            a = self.triples.allTriplesGeneral()
+        return a
 
     def allTriplesLowSelectivity(self):
         a = True
@@ -40,12 +51,20 @@ class Service(object):
              new_triples = self.triples.instantiate(d)
         return Service("<"+self.endpoint+">", new_triples, self.limit)
 
+    def instantiateFilter(self, d, filter_str):
+        new_filters = []
+        new_filters.extend(self.filter_nested)
+        new_filters.append(filter_str)
+        #new_filters_vars = self.filters_vars | set(d)
+        
+        return Service("<"+self.endpoint+">", self.triples, self.limit, new_filters)
+
     def getTriples(self):
         if isinstance(self.triples, list):
             triples_str = " . ".join(map(str, self.triples))
         else:
             triples_str = str(self.triples)
-        return triples_str + " . ".join(map(str, self.filters))
+        return triples_str + " . ".join(map(str, self.filters)) + " . ".join(map(str, self.filter_nested))
 
     def show(self, x):
         def pp (t):
@@ -54,7 +73,8 @@ class Service(object):
             triples_str = " . \n".join(map(pp, self.triples))
         else:
             triples_str = self.triples.show(x+"    ")
-        filters_str = " . \n".join(map(pp, self.filters))
+        filters_str = " . \n".join(map(pp, self.filters)) + "  \n".join(map(pp, self.filter_nested))
+        
         return (x + "SERVICE <" + self.endpoint + "> { \n" + triples_str
                 + filters_str + "\n" + x + "}")
 
@@ -65,7 +85,7 @@ class Service(object):
             triples_str = " . \n".join(map(pp, self.triples))
         else:
             triples_str = self.triples.show2(x+"    ")
-        filters_str = " . \n".join(map(pp, self.filters))
+        filters_str = " . \n".join(map(pp, self.filters)) + "  \n".join(map(pp, self.filter_nested))
         return triples_str + filters_str
 
     def getVars(self):
@@ -116,15 +136,17 @@ class Service(object):
 
 class Query(object):
 
-    def __init__(self, prefs, args, body, distinct):
+    def __init__(self, prefs, args, body, distinct, filter_nested=''):
         self.prefs = prefs
         self.args = args
         self.body = body
         self.distinct = distinct
         self.join_vars = self.getJoinVars()
+        self.filter_nested = filter_nested
         genPred = readGeneralPredicates(os.path.join(os.path.split(os.path.split(__file__)[0])[0],
                                                      'Catalog','generalPredicates'))
         self.body.setGeneral(getPrefs(self.prefs), genPred)
+       
 
     def __repr__(self):
         body_str = str(self.body)
@@ -135,7 +157,7 @@ class Query(object):
             d = "DISTINCT "
         else:
             d = ""
-        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {\n"+body_str+"\n}"
+        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {\n"+body_str+"\n"+self.filter_nested+"\n}"
 
     def instantiate(self, d):
         new_args = []
@@ -145,6 +167,14 @@ class Query(object):
                 new_args.append(a)
         return Query(self.prefs, new_args, self.body.instantiate(d), self.distinct)
 
+    def instantiateFilter(self, d, filter_str):
+        new_args = []
+        for a in self.args:
+            an = string.lstrip(string.lstrip(self.subject.name, "?"), "$")
+            if not (an in d):
+                new_args.append(a)
+        return Query(self.prefs, new_args, self.body, self.distinct, self.filter_nested + ' ' + filter_str)
+       
     def places(self):
         return self.body.places()
 
@@ -164,7 +194,7 @@ class Query(object):
             d = "DISTINCT "
         else:
             d = ""
-        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {\n"+body_str+"\n}"
+        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {\n"+body_str+"\n"+self.filter_nested+"\n}"
 
     def show2(self):
 
@@ -176,7 +206,7 @@ class Query(object):
             d = "DISTINCT "
         else:
             d = ""
-        return self.getPrefixes() + "SELECT " + d + args_str + "\nWHERE {\n" + body_str + "\n}"
+        return self.getPrefixes() + "SELECT " + d + args_str + "\nWHERE {\n" + body_str + "\n" + self.filter_nested + "\n}"
 
     def getPrefixes(self):
         r = ""
@@ -226,7 +256,6 @@ class Query(object):
             return " "
 
 def getJoinVarsUnionBlock(ub):
-
     join_vars = []
 
     for jb in ub.triples:
@@ -293,8 +322,9 @@ def aux2(e,x, op):
     return ""
 
 class UnionBlock(object):
-    def __init__(self, triples):
+    def __init__(self, triples, filters=''):
         self.triples = triples
+        self.filters = filters
 
     def __repr__(self):
         return self.show(" ")
@@ -303,7 +333,7 @@ class UnionBlock(object):
 
         n = nest(self.triples)
         if n:
-            return aux(n, w, " UNION ")
+            return aux(n, w, " UNION ") + self.filters
         else:
             return " "
 
@@ -313,6 +343,15 @@ class UnionBlock(object):
                 t.setGeneral(ps, genPred)
         else:
             self.triples.setGeneral(ps, genPred)
+
+    def allTriplesGeneral(self):
+        a = True
+        if isinstance(self.triples, list):
+            for t in self.triples:
+                a = a and t.allTriplesGeneral()
+        else:
+            a = self.triples.allTriplesGeneral()
+        return a
 
     def allTriplesLowSelectivity(self):
         a = True
@@ -330,10 +369,17 @@ class UnionBlock(object):
         else:
              return self.triples.instantiate(d)
 
+    def instantiateFilter(self, d, filter_str):
+        if isinstance(self.triples, list):
+             ts = [t.instantiateFilter(d, filter_str) for t in self.triples]
+             return JoinBlock(ts, filter_str)
+        else:
+             return self.triples.instantiateFilter(d, filter_str)
+
     def show2(self, w):
         n = nest(self.triples)
         if n:
-            return aux2(n, w, " UNION ")
+            return aux2(n, w, " UNION ") + self.filters
         else:
             return " "
 
@@ -381,8 +427,9 @@ def nest(l):
         return None
 
 class JoinBlock(object):
-    def __init__(self, triples):
+    def __init__(self, triples, filters=''):
         self.triples = triples
+        self.filters = filters
 
     def __repr__(self):
         r = ""
@@ -397,7 +444,7 @@ class JoinBlock(object):
                         r = str(t)
         else:
             r = str(self.triples)
-        return r
+        return r #+ self.filters
 
     def setGeneral(self, ps, genPred):
         if isinstance(self.triples, list):
@@ -405,6 +452,15 @@ class JoinBlock(object):
                 t.setGeneral(ps, genPred)
         else:
             self.triples.setGeneral(ps, genPred)
+
+    def allTriplesGeneral(self):
+        a = True
+        if isinstance(self.triples, list):
+            for t in self.triples:
+                a = a and t.allTriplesGeneral()
+        else:
+            a = self.triples.allTriplesGeneral()
+        return a
 
     def allTriplesLowSelectivity(self):
         a = True
@@ -420,7 +476,7 @@ class JoinBlock(object):
         if isinstance(self.triples, list):
             n = nest(self.triples)
             if n:
-                return aux(n, x, " . ")
+                return aux(n, x, " . ") + self.filters
             else:
                 return " "
         else:
@@ -433,11 +489,18 @@ class JoinBlock(object):
         else:
              return self.triples.instantiate(d)
 
+    def instantiateFilter(self, d, filter_str):
+        if isinstance(self.triples, list):
+             ts = [t.instantiateFilter(d, filter_str) for t in self.triples]
+             return JoinBlock(ts, filter_str)
+        else:
+             return self.triples.instantiateFilter(d, filter_str)
+
     def show2(self, x):
         if isinstance(self.triples, list):
             n = nest(self.triples)
             if n:
-                return aux2(n, x, " . ")
+                return aux2(n, x, " . ") + self.filters
             else:
                 return " "
         else:
@@ -499,6 +562,9 @@ class Filter(object):
 
     def places(self):
         return self.expr.places()
+    
+    def allTriplesGeneral(self):
+        return False
 
     def allTriplesLowSelectivity(self):
         return True
@@ -506,8 +572,10 @@ class Filter(object):
     def instantiate(self, d):
         return Filter(self.expr.instantiate(d))
 
-    def constantNumber(self):
+    def instantiateFilter(self, d, filter_str):
+        return Filter(self.expr.instantiateFilter(d, filter_str))
 
+    def constantNumber(self):
         return self.expr.constantNumber()
 
     def constantPercentage(self):
@@ -530,6 +598,9 @@ class Optional(object):
 
     def places(self):
         return self.bgg.places()
+    
+    def allTriplesGeneral(self):
+        return self.bgg.allTriplesGeneral()
 
     def allTriplesLowSelectivity(self):
         return self.bgg.allTriplesLowSelectivity()
@@ -537,8 +608,10 @@ class Optional(object):
     def instantiate(self, d):
         return Optional(self.bgg.instantiate(d))
 
-    def constantNumber(self):
+    def instantiateFilter(self, d, filter_str):
+        return Optional(self.bgg.instantiateFilter(d, filter_str))
 
+    def constantNumber(self):
         return self.bgg.constantNumber()
 
     def constantPercentage(self):
@@ -560,6 +633,13 @@ class Expression(object):
     def instantiate(self, d):
         return Expression(self.op, self.left.instantiate(d),
                           self.right.instantiate(d))
+
+    def instantiateFilter(self, d, filter_str):
+        return Expression(self.op, self.left.instantiateFilter(d, filter_str),
+                          self.right.instantiateFilter(d, filter_str))
+
+    def allTriplesGeneral(self):
+        return False
 
     def allTriplesLowSelectivity(self):
         return True
@@ -599,6 +679,10 @@ class Triple(object):
 
     def __hash__(self):
         return hash((self.subject,self.predicate,self.theobject))
+    
+    def allTriplesGeneral(self):
+        return self.isGeneral
+
     #Modified 17-12-2013. General predicates are not considered to decide if the triple is selective or not
     def allTriplesLowSelectivity(self):
         return ((not self.predicate.constant)
@@ -645,6 +729,9 @@ class Triple(object):
         else:
             o = self.theobject
         return Triple(s, p, o)
+
+    def instantiateFilter(self, d, filter_str):
+        return Triple(self.subject, self.predicate, self.theobject)
 
     def constantNumber(self):
         n = 0
