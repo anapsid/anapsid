@@ -1,382 +1,387 @@
-from __future__ import division
-import math
-import heapq
-import string
-import abc
-
-class Tree(object):
-
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
-    def instantiate(self, d):
-        return
-
-    def degree(self):
-        return getDegree(self.vars, self.dict)
-
-    def __leq__ (self, other):
-        return (self.size < other.size or (self.size == other.size 
-                                           and self.degree() <= other.degree()))
-
-    def __lt__ (self, other):
-        return (self.size < other.size or (self.size == other.size 
-                                           and self.degree() < other.degree()))
-
-    @abc.abstractmethod
-    def __eq__(self, other):
-        return
-
-    @abc.abstractmethod
-    def __hash__(self):
-        return
-
-    def __ne__(self, other):
-        return not self == other
-
-    @abc.abstractmethod
-    def __repr__(self):
-        return
-
-    @abc.abstractmethod
-    def aux(self, n):
-        return
-
-    @abc.abstractmethod
-    def aux2(self, n):
-        return
-
-    def show(self, n):
-        return self.aux(n)
-
-    def show2(self, n):
-        return self.aux2(n)
-
-    @abc.abstractmethod
-    def getVars(self):
-        return
-
-    @abc.abstractmethod
-    def places(self):
-        return
-
-    @abc.abstractmethod
-    def constantNumber(self):
-        return
-
-    def constantPercentage(self):
-        return self.constantNumber()/self.places()
-
-class Node(Tree):
-
-    def __init__(self, l, r):
-        self.left = l
-        self.right = r
-        self.vars = unify(l.vars, r.vars, l.dict)
-        self.dict = l.dict = r.dict
-        self.size = l.size + r.size
-
-    def instantiate(self, d):
-        return Node(self.left.instantiate(d), self.right.instantiate(d))
-
-    def __eq__(self, other):
-        return ((isinstance(other, Node)) and (self.vars == other.vars) and 
-                (self.dict == other.dict) and (self.degree() == other.degree()) and 
-                (self.size == other.size) and (self.left == other.left) and
-                (self.right == other.right))
-
-    def __hash__(self):
-        return hash((self.vars, self.dict, self.size, self.degree(),
-                     self.left, self.right))
-
-    def __repr__(self):
-        return self.aux(" ")
-
-    def aux(self, n):
-        s = ""
-        if self.left:
-            s = s + n + "{\n" + self.left.aux(n+"  ") + "\n" + n + "}\n" + n + "  . \n"
-            
-        if self.right:
-            s = s + n + "{\n" + self.right.aux(n+"  ") + "\n"+ n+"}"
-        return s
-
-    def show(self, n):
-        return self.aux(n)
-
-    def show2(self, n):
-        return self.aux2(n)
-
-    def aux2(self, n):
-        s = ""
-        if self.left:
-            s = s + n + "{\n" + self.left.aux2(n+"  ") + "\n" + n + "}\n" + n + "  UNION \n"
-            
-        if self.right:
-            s = s + n + "{\n" + self.right.aux2(n+"  ") + "\n"+ n+"}"
-        return s
-
-    def places(self):
-        return self.left.places() + self.right.places()
-
-    def constantNumber(self):
-        return self.left.constantNumber() + self.right.constantNumber()
-
-    def getVars(self):
-        vs = []
-        if self.left:
-            vs = vs +self.left.getVars()
-        if self.right:
-            vs = vs +self.right.getVars()
-        return vs
-
-def unify (vars0, vars1, dict0):
-
-    vars2 = set(vars0)
-    for v in vars1:
-       if v in vars2:
-           dict0[v] = dict0[v] - 1
-           if dict0.has_key(v) and dict0[v] == 0:
-              del dict0[v]
-              vars2.remove(v)
-       else:
-           vars2.add(v)
-    return vars2
-
-def getDegree(vars0, dict0):
-
-    s = 0
-    for v in vars0:
-        s = s + dict0[v]
-    return s
-
-class Leaf(Tree):
-    def __init__(self, s, vs, dc):
-        self.vars = vs
-        self.dict = dc
-        self.size = 1
-        self.service = s
-
-    def __hash__(self):
-        return hash((self.vars, self.dict, self.size, self.degree(), 
-                     self.service))
-
-    def __repr__(self):
-        return str(self.service)
-
-    def __eq__(self, other):
-        return ((isinstance(other, Leaf)) and (self.vars == other.vars) and 
-                (self.dict == other.dict) and (self.degree() == other.degree()) and 
-                (self.service == other.service))
-
-    def instantiate(self, d):
-        newvars = self.vars - set(d.keys())
-        newdict = self.dict.copy()
-        for c in d:
-            if c in newdict:
-                del newdict[c]
-        return Leaf(self.service.instantiate(d), newvars, newdict)
-
-    def aux(self, n):
-        return self.service.show(n)
-
-    def aux2(self, n):
-        return self.service.show2(n)
-
-    def show(self, n):
-        return self.aux(n)
-
-    def show2(self, n):
-        return self.aux2(n)
-
-    def getInfoIO(self, query):
-        subquery = self.service.getTriples()
-        vs = list(set(self.service.getVars()))
-        predictVar=set(self.service.getPredVars())
-        variables = [string.lstrip(string.lstrip(v, "?"), "$") for v in vs]
-        if query.args == []:
-            projvars = vs
-        else:
-            projvars = list(set([v.name for v in query.args if not v.constant]))
-        subvars = list((query.join_vars | set(projvars)) & set(vs))
-        
-        if subvars == []:
-          subvars=vs
-        subvars = list(set(subvars) | predictVar)
-        
-        # This corresponds to the case when the subquery is the same as the original query.
-        # In this case, we project the variables of the original query.
-        if query.body.show(" ").count("SERVICE") == 1:
-          subvars = projvars
-        
-        subvars = string.joinfields(subvars, " ")
-        if query.distinct:
-            d = "DISTINCT "
-        else:
-            d = ""
-        subquery = "SELECT "+d+ subvars + " WHERE {" + subquery + "}"
-        return (self.service.endpoint, query.getPrefixes()+subquery, set(variables))
-
-    def getCount(self, query, vars, endpointType):
-        subquery = self.service.getTriples()
-        if len(vars) == 0:
-            vs = self.service.getVars()
-            variables = [string.lstrip(string.lstrip(v, "?"), "$") for v in vs]
-            vars_str = "*"
-        else:
-            variables = vars
-            service_vars = self.service.getVars()
-            vars2 = []
-            for v1 in vars:
-                for v2 in service_vars:
-                    if (v1 == v2[1:]):
-                        vars2.append(v2)
-                        break
-            if len(vars2) > 0:
-                vars_str = string.joinfields(vars2, " ")
-            else:
-                vars_str = "*"
-
-        d = "DISTINCT "
-        if (endpointType=="V"):
-             subquery = "SELECT COUNT "+d+ vars_str + "  WHERE {" + subquery + "}"
-        else:
-            subquery = "SELECT ( COUNT ("+d+ vars_str + ") AS ?cnt)  WHERE {" + subquery + "}"
-        return (self.service.endpoint, query.getPrefixes()+subquery)
-
-    def getVars(self):
-        return self.service.getVars()
-
-    def places(self):
-        return self.service.places()
-
-    def constantNumber(self):
-        return self.service.constantNumber()
-
-def sort(lss):
-
-    lo = []
-    while not(lss == []):
-        m = 0
-        for i in xrange(len(lss)):
-            if lss[i].constantPercentage() > lss[m].constantPercentage():
-                m = i
-        lo.append(lss[m])
-        lss.pop(m)
-    return lo
-
-def createLeafs(lss):
-
-    d = dict()
-    for s in lss:
-        l = s.getVars()
-        l = set(l)
-        for e in l:
-            d[e] = d.get(e, 0) + 1
-    el = []
-    for e in d:
-        d[e] = d[e] - 1
-        if d[e] <= 0:
-            el.append(e)
-    for e in el:
-        del d[e]
-    ls = []
-    lo = sort(lss)
-
-    for s in lo:
-        e = set()
-        l = s.getVars()
-        for v in l:
-            if d.has_key(v):
-                e.add(v)
-        ls.append(Leaf(s, e, d))
-
-    return (d, ls)
-
-def shareAtLeastOneVar(l, r):
-
-    return len(l.vars & r.vars) > 0
-
-def sortedInclude(l, e):
-
-    for i in range(0, len(l)):
-        if e < l[i]:
-            l.insert(i, e)
-            return
-    l.insert(len(l), e)
-
-def makeNode(l, r):
-
-    if l.constantPercentage() > r.constantPercentage():
-        n = Node(l, r)
-    else:
-        n = Node(r, l)
-    return n
-
-def makeBushyTree(ss):
-
-    (d, pq) = createLeafs(ss)
-    heapq.heapify(pq)
-    others = []
-    while len(pq) > 1:
-        done = False
-        l = heapq.heappop(pq)
-
-        lpq = heapq.nsmallest(len(pq), pq)
-
-        for i in range(0, len(pq)):
-            r = lpq[i]
-
-            if shareAtLeastOneVar(l,r):
-                pq.remove(r)
-                n = makeNode(l, r)
-                heapq.heappush(pq, n)
-                done = True
-                break
-        if not done: 
-            others.append(l)
-
-    if len(pq) == 1:
-        for e in others:
-            pq[0] = makeNode(pq[0], e)
-        return pq[0]
-    elif others:
-        while len(others) > 1:
-            l = others.pop(0)
-            r = others.pop(0)
-
-            n = Node(l, r)
-            others.append(n)
-        if others:
-            return others[0]
-        return None
-
-def makeNaiveTree(ss):
-    (_, pq) = createLeafs(ss)
-    while len(pq) > 1:
-        l = pq.pop(0)
-        r = pq.pop(0)
-
-        n = makeNode(l, r)
-        pq.append(n)
-
-    if len(pq) == 1:
-        return pq[0]
-    else:
-        return None
-
-def makeLLTree(ss):
-
-    (_, pq) = createLeafs(ss)
-    while len(pq) > 1:
-        l = pq.pop(0)
-        r = pq.pop(0)
-
-        n = makeNode(l, r)
-        pq.insert(0, n)
-
-    if len(pq) == 1:
-        return pq[0]
-    else:
-        return None
-
+from ply import lex, yacc
+
+from services import Query, Argument, Triple, UnionBlock, JoinBlock, Optional, Filter, Expression
+
+# Lexer
+
+reserved = {
+    'UNION' : 'UNION',
+    'FILTER' : 'FILTER',
+    'OPTIONAL' : 'OPTIONAL',
+    'SELECT' : 'SELECT',
+    'DISTINCT' : 'DISTINCT',
+    'WHERE' : 'WHERE',
+    'PREFIX' : 'PREFIX'
+}
+
+tokens = [
+    "CONSTANT",
+    "VARIABLE",
+    "LKEY",
+    "RKEY",
+    "COLON",
+    "POINT",
+    "URI",
+    "ALL",
+    "LPAR",
+    "RPAR",
+    "EQUALS",
+    "NEQUALS",
+    "LESS",
+    "LESSEQ",
+    "GREATER",
+    "GREATEREQ",
+    "ID"#,
+#    "PREF",
+#    "COLON"
+     ] + list(reserved.values())
+
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z_0-9\-]*'
+    t.type = reserved.get(t.value.upper(),'ID')    # Check for reserved words
+    return t
+
+t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@[a-z][a-z])?" #According to ISO 639-1, lang tags are specified with two letters.
+#t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@en)?"
+t_VARIABLE = r"([\?]|[\$])([A-Z]|[a-z])\w*"
+t_LKEY = r"\{"
+t_LPAR = r"\("
+t_RPAR = r"\)"
+t_COLON = r"\:"
+t_RKEY = r"(\.)?\s*\}"
+#t_SELECT = r"\S\E\L\E\C\T" +"\s"+r"\D\I\S\T\I\N\C\T"
+#t_SELECT = r"[S|s][E|e][L|l][E|e][C|c][T|t]" +"\s"+r"([D|d][I|i][S|s][T|t][I|i][N|n][C|c][T|t])?"
+#t_WHERE = r"[W|w][H|h][E|e][R|r][E|e]"
+t_POINT = r"\."
+#t_PREFIX = r"(PREFIX)|(\prefix)"
+#t_PREF = r"[^ \t\n\r\f\v\:]+"
+#t_COLON = r"\:"
+#t_PRED0 = r"\#[^ \t\n\r\f\v\.](\S)*"+":"+r"(\s)?(\S)+"
+#t_PRED1 = r"\#[^ \t\n\r\f\v\.](\S)*"+":"+r"(\s)?<"+"\S+"+r">"
+t_EQUALS = r"="
+t_NEQUALS = r"\!="
+t_LESS = r"<"
+t_LESSEQ = r"<="
+t_GREATER = r">"
+t_GREATEREQ = r">="
+t_URI = r"<\S+>"
+t_ALL = r"\*"
+
+t_ignore = ' \t\n'
+
+def t_error(t):
+    raise TypeError("Unknown text '%s' in line %d " % (t.value,t.lexer.lineno,))
+
+# Define a rule so we can track line numbers
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+
+# Compute column. 
+#     input is the input text string
+#     token is a token instance
+#def find_column(input,token):
+#    last_cr = input.rfind('\n',0,token.lexpos)
+#    if last_cr < 0:
+#	last_cr = 0
+#    column = (token.lexpos - last_cr) + 1
+#    return column
+
+lexer = lex.lex()
+
+# Parser
+
+def p_parse_sparql(p):
+    """
+    parse_sparql : prefix_list query
+    """
+    (vs, ts, d) = p[2]
+    p[0] = Query(p[1], vs, ts, d)
+
+def p_prefix_list(p):
+    """
+    prefix_list : prefix prefix_list
+    """
+    p[0] = [p[1]] + p[2]
+
+def p_empty_prefix_list(p):
+    """
+    prefix_list : empty
+    """
+    p[0] = []
+
+def p_empty(p):
+    """
+    empty :
+    """
+    pass
+
+def p_prefix(p):
+    """
+    prefix : PREFIX uri
+    """
+    p[0] = p[2]
+
+#def p_pref(p):
+#    """
+#    pref : uri
+#    """
+#    p[0] = p[1]
+
+def p_uri_0(p):
+    """
+    uri : ID COLON ID
+    """
+    p[0] = p[1]+p[2]+p[3]
+
+def p_uri_1(p):
+    """
+    uri : ID COLON URI
+    """
+    p[0] = p[1]+p[2]+p[3]
+
+def p_uri_2(p):
+    """
+    uri : URI
+    """
+    p[0] = p[1]
+
+def p_query_0(p):
+    """
+    query : SELECT distinct var_list WHERE LKEY group_graph_pattern RKEY
+    """
+    p[0] = (p[3], p[6], p[2])
+
+def p_query_1(p):
+    """
+    query : SELECT distinct ALL WHERE LKEY group_graph_pattern RKEY
+    """
+    p[0] = ([], p[6], p[2])
+
+def p_distinct_0(p):
+    """
+    distinct : DISTINCT
+    """
+    p[0] = True
+
+def p_distinct_1(p):
+    """
+    distinct : empty
+    """
+    p[0] = False
+
+def p_ggp_0(p):
+    """
+    group_graph_pattern : union_block
+    """
+    p[0] = UnionBlock(p[1])
+
+def p_union_block_0(p):
+    """
+    union_block : join_block rest_union_block
+    """
+    p[0] = [JoinBlock(p[1])] + p[2]
+
+def p_rest_union_block_0(p):
+    """
+    rest_union_block : empty
+    """
+    p[0] = []
+
+def p_rest_union_block_1(p):
+    """
+    rest_union_block : UNION join_block rest_union_block
+    """
+    p[0] = [JoinBlock(p[2])] + p[3]
+
+def p_join_block(p):
+    """
+    join_block : bgp rest_join_block 
+    """
+    p[0] = [p[1]] + p[2]
+
+def p_rest_join_block_0(p):
+    """
+    rest_join_block : empty
+    """
+    p[0] = []
+
+def p_rest_join_block_1(p):
+    """
+    rest_join_block : POINT bgp rest_join_block
+    """
+    p[0] = [p[2]]+p[3]
+
+def p_rest_join_block_2(p):
+    """
+    rest_join_block : bgp rest_join_block
+    """
+    p[0] = [p[1]]+p[2]
+
+
+def p_bgp_0(p):
+    """
+    bgp : triple
+    """
+    p[0] = p[1]
+
+def p_bgp_1(p):
+    """
+    bgp : FILTER LPAR expression RPAR
+    """
+    p[0] = Filter(p[3])
+
+def p_bgp_2(p):
+    """
+    bgp : OPTIONAL LKEY group_graph_pattern RKEY
+    """
+    p[0] = Optional(p[3])
+
+def p_bgp_3(p):
+    """
+    bgp : LKEY group_graph_pattern RKEY
+    """
+    p[0] = p[2]
+
+def p_var_list(p):
+    """
+    var_list : var_list VARIABLE
+    """
+    p[0] = p[1] + [Argument(p[2], False)]
+
+def p_single_var_list(p):
+    """
+    var_list : VARIABLE
+    """
+    p[0] = [Argument(p[1], False)]
+    
+#def p_triple_list(p):
+#    """
+#    triple_list : triple_list POINT triple
+#    """
+#    p[0] = p[1] + [p[3]]
+
+#def p_single_triple_list(p):
+#    """
+#    triple_list : triple
+#    """
+#    p[0] = [p[1]]
+
+def p_triple_0(p):
+    """
+    triple : subject predicate object
+    """
+    p[0] = Triple(p[1], p[2], p[3])
+
+def p_expression_0(p):
+    """
+    expression : expression EQUALS expression
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+
+def p_expression_1(p):
+    """
+    expression : CONSTANT
+    """
+    p[0] = Argument(p[1], True)
+
+def p_expression_2(p):
+    """
+    expression : VARIABLE
+    """
+    p[0] = Argument(p[1], False)
+
+def p_expression_3(p):
+    """
+    expression : expression LESS expression
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+
+def p_expression_4(p):
+    """
+    expression : expression LESSEQ expression
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+
+def p_expression_5(p):
+    """
+    expression : expression GREATER expression
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+
+def p_expression_6(p):
+    """
+    expression : expression GREATEREQ expression
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+
+def p_expression_7(p):
+    """
+    expression : expression NEQUALS expression
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+
+#def p_expression_3(p):
+#    """
+#    expression : expression RAB expression
+#    """
+#    p[0] = Expression(p[2], p[1], p[3])
+
+#def p_expression_4(p):
+#    """
+#    expression : expression LAB expression
+#    """
+#    p[0] = Expression(p[2], p[1], p[3])
+
+def p_predicate_uri(p):
+    """
+   predicate : uri
+    """
+    p[0] = Argument(p[1], True)
+
+def p_predicate_var(p):
+    """
+   predicate : VARIABLE
+    """
+    p[0] = Argument(p[1], False)
+
+def p_subject_uri(p):
+    """
+    subject : uri
+    """
+    p[0] = Argument(p[1], True)
+
+def p_subject_variable(p):
+    """
+    subject : VARIABLE
+    """
+    p[0] = Argument(p[1], False)
+
+def p_object_uri(p):
+    """
+    object : uri
+    """
+    p[0] = Argument(p[1], True)
+
+def p_object_variable(p):
+    """
+    object : VARIABLE
+    """
+    p[0] = Argument(p[1], False)
+
+def p_object_constant(p):
+    """
+    object : CONSTANT
+    """
+    p[0] = Argument(p[1], True)
+
+def p_error(p):
+        raise TypeError("unknown text at %r" % (p.value,))
+
+parser = yacc.yacc(debug=0)
+
+# Helpers
+
+def parse(string):
+
+    return parser.parse(string, lexer=lexer)
