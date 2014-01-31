@@ -445,7 +445,6 @@ def assignEndpointS(tl, l, genPred, prefixes, c):
     return qcl
 
 def assignEndpointM(tl, l, genPred, prefixes, c):
-
     qcl0 = collections.defaultdict(list)
     qcl1 = collections.defaultdict(list)
     ts = list(tl)
@@ -522,7 +521,11 @@ def selectCurrentBest(options, triple, qcl, ps, genPred, c):
       for ep in options:
        nl = [triple]
        #print "ahora con "+str(nl)
-       if test(ep, nl, ps, c) and not ep in currentOptions:
+       #Avoid ask's of non-instantiated triple patterns
+       if not(triple.subject.constant or triple.predicate.constant or triple.theobject.constant) and not ep in currentOptions:
+       #    print triple.subject.name, triple.predicate.name, triple.theobject.name
+           currentOptions.append(ep)
+       elif test(ep, nl, ps, c) and not ep in currentOptions:
            #print "yes"
            currentOptions.append(ep)
     return currentOptions
