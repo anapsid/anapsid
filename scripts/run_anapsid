@@ -128,7 +128,6 @@ def conclude(res, p2, printResults):
             time2 = time() - time1
             t1 = time2
             tn = time2
-            print "Empty set."
             printInfo()
             return
 
