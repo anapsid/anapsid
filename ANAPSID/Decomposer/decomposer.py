@@ -275,7 +275,6 @@ def potentialStarS(triple, triples):
         if ((not triple.subject.constant) and (not t0.subject.constant)
             and (triple.subject.name == t0.subject.name)):
           ps.append(t0)
-
     return ps
 
 def potentialStarC(triple, triples):
@@ -292,7 +291,6 @@ def potentialStarC(triple, triples):
               or
             ((not triple.theobject.constant) and (not t0.theobject.constant) and (triple.theobject.name == t0.theobject.name))):
             ps.append(t0)
-
     return ps
 
 
@@ -483,24 +481,26 @@ def assignEndpointM(tl, l, genPred, prefixes, c):
             ps2.extend(domainProviders(l, sn, genPred))
         ps2 = [e for e in ps2 if e in eps0]
         ps.extend(ps2)
+        #print sg.predicate
 	#print ps
         ps3 = getMostCommon(getEndpoints(potentialStarS(sg, tl), qcl0))
         ps3 = [e for e in ps3 if e in eps0]
         if len(ps1) == 0 and len(ps2) == 0 and len(ps3) > 0:
-            ps = ps3
+           ps = ps3
         else:
-            ps.extend(ps3)
+           ps.extend(ps3)
         #print 'ps'
 	#print ps
         p = selectCurrentBest(ps, sg, qcl0, prefixes, genPred, c)
+        #print p
         if len(p) == 1:
-            p = p[0]
-            qcl0[p].append(sg)
+             p = p[0]
+             qcl0[p].append(sg)
         elif len(p) == 0:
-            p = eps0[0]
-            qcl0[p].append(sg)
+             p = eps0[0]
+             qcl0[p].append(sg)
         else:
-            qcl1[sg].extend(p)
+             qcl1[sg].extend(p)
     return (qcl0, qcl1)
 
 def selectCurrentBest(options, triple, qcl, ps, genPred, c):
