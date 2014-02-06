@@ -101,6 +101,7 @@ def contactSourceAux(referer, server, path, port, query, queue):
     json = "application/sparql-results+json"
     
     # Build the query and header.
+    #params = urllib.urlencode({'query': query})
     params = urllib.urlencode({'query': query, 'format': json})
     headers = {"User-Agent": "Anapsid/2.7", "Accept": "*/*", "Referer": referer, "Host": server}
     #print params
@@ -116,12 +117,14 @@ def contactSourceAux(referer, server, path, port, query, queue):
         res = response.read()
         res = res.replace("false", "False")
         res = res.replace("true", "True")
+        #print "raw results from endpoint", res 
         res = eval(res)
         
         if type(res) == dict:
             b = res.get('boolean', None)
 
             if 'results' in res:
+                #print "raw results from endpoint", res 
                 for x in res['results']['bindings']:
                     for key, props in x.iteritems():
                         #Handle typed-literals and language tags
@@ -136,7 +139,9 @@ def contactSourceAux(referer, server, path, port, query, queue):
 
                 # Every tuple is added to the queue.
                 for elem in reslist:
+                    #print path, elem
                     queue.put(elem)
+                #print "query", query, "endpoint", server, "cardinality", len(reslist)
         else:
             print ("the source "+str(server)+" answered in "+ response.getheader("content-type")+" format, instead of"
                     +" the JSON format required, then that answer will be ignored")
@@ -468,7 +473,7 @@ def createPlan(query, adaptive, wc, buffersize, c, endpointType):
     if (query.distinct):
         operatorTree = TreePlan(Xdistinct(None), operatorTree.vars, operatorTree)
 
-    #print "opertator type:", operatorTree
+    #print "operator type:", operatorTree
     return operatorTree
 
 def includePhysicalOperatorsQuery(query, a, wc, buffersize, c):
@@ -624,6 +629,7 @@ def includePhysicalOperatorJoin(a, wc, l, r):
             dependent_join = True
             #print "Planner CASE 2: nested loop swapping plan", type(r)
         elif not(lowSelectivityLeft) and lowSelectivityRight  and not(isinstance(l, TreePlan) and (l.operator.__class__.__name__ == "NestedHashJoin" or l.operator.__class__.__name__ == "Xgjoin")) and not(isinstance(r.right,IndependentOperator)) and not(r.operator.__class__.__name__ == "NestedHashJoin" or r.operator.__class__.__name__ == "Xgjoin") and  (r.right.operator.__class__.__name__ == "Xunion"):
+        #elif not(isinstance(r,IndependentOperator)) and not(isinstance(r.left,IndependentOperator)) and (r.left.operator.__class__.__name__ == "Xunion"):
             n = TreePlan(NestedHashJoin(join_variables), all_variables, l, r)
             dependent_join = True
             #print "Planner case 2.5", type(r)
