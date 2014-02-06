@@ -388,6 +388,12 @@ class UnionBlock(object):
         for t in self.triples:
             l = l + t.getVars()
         return l
+     
+    def getPredVars(self):
+        l=[]
+        for t in self.triples:
+            l = l + t.getPredVars()
+        return l
 
     def includeFilter(self, f):
 
@@ -514,7 +520,14 @@ class JoinBlock(object):
         else:
             l = self.triples.getVars()
         return l
-
+    def getPredVars(self):
+        l = []
+        if isinstance(self.triples, list):
+            for t in self.triples:
+                l = l + t.getPredVars()
+        else:
+            l = self.triples.getPredVars()
+        return l
     def includeFilter(self, f):
         for t in self.triples:
             if isinstance(t, list):
