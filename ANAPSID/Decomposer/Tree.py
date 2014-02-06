@@ -227,6 +227,7 @@ class Leaf(Tree):
           subvars = projvars
         
         subvars = string.joinfields(subvars, " ")
+        #MEV distinct pushed down to the sources
         if query.distinct:
             d = "DISTINCT "
         else:
