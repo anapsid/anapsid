@@ -40,6 +40,10 @@ class Xgjoin(Join):
         newvars = self.vars - set(d.keys())
         return Xgjoin(newvars)
 
+    def instantiateFilter(self, instantiated_vars, filter_str):
+        newvars = self.vars - set(instantiated_vars)
+        return Xgjoin(newvars)
+
     def execute(self, left, right, out):
         # Executes the Xgjoin.
         #print "gjoin!"
@@ -61,7 +65,7 @@ class Xgjoin(Join):
             if (not(tuple1 == "EOF")):
                 try :
                     tuple1 = self.left.get(False)
-                    #print tuple1
+                    #print "tuple1", tuple1
                     signal.alarm(self.timeoutSecondStage)
                     self.stage1(tuple1, self.left_table, self.right_table)
                     self.memory_right += 1
@@ -80,7 +84,7 @@ class Xgjoin(Join):
             if (not(tuple2 == "EOF")):
                 try:
                     tuple2 = self.right.get(False)
-                    #print tuple2
+                    #print "tuple2", tuple2
                     signal.alarm(self.timeoutSecondStage)
                     self.stage1(tuple2, self.right_table, self.left_table)
                     self.memory_left += 1
@@ -112,7 +116,7 @@ class Xgjoin(Join):
             resource = ''
             #print(tuple)
             for var in self.vars:
-                resource = resource + tuple[var]
+                resource = resource + str(tuple[var])
 
             # Probe the tuple against its RJT table.
             probeTS = self.probe(tuple, resource, tuple_rjttable)
@@ -238,10 +242,12 @@ class Xgjoin(Join):
             list_records = rjttable[resource].records
 
             for record in list_records:
-                res = record.tuple.copy()
+                res = {}
+                res.update(record.tuple)
+                #res = record.tuple.copy()
                 res.update(tuple)
                 self.qresults.put(res)
-                #print "res:", res
+                #print hex(id(self)), "res:", res
 
         return probeTS
 
