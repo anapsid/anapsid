@@ -7,6 +7,7 @@ The intermediate results are represented in a queue.
 @author: Maribel Acosta Deibe
 '''
 from multiprocessing import Queue
+from Queue import Empty
 #from collections import Counter
 from ANAPSID.Operators.Union import _Union
 
@@ -36,20 +37,22 @@ class Xunion(_Union):
         self.left = left
         self.right = right
         self.qresults = out
+        #print "left", hex(id(left)), "right", hex(id(right)), "out", hex(id(out))
 
         # Identify the kind of union to perform.
         if (self.vars_left == self.vars_right):
             self.sameVariables()
         else:
             self.differentVariables()
-        #print "cardinalidad: "+str(len(self.qresults))
+
+        #print "cardinalidad: ", hex(id(self)), self.debug
         # Put EOF in queue and exit.
         self.qresults.put("EOF")
         return
 
     def sameVariables(self):
         # Executes the Xunion operator when the variables are the same.
-
+        
         # Initialize tuples.
         tuple1 = None
         tuple2 = None
@@ -61,7 +64,7 @@ class Xunion(_Union):
                     tuple1 = self.left.get(False)
                     if (not (tuple1 == "EOF")):
                         self.qresults.put(tuple1)
-                except Exception:
+                except Empty:
                     # This catch:
                     # Empty: in tuple1 = self.left.get(False), when the queue is empty.
                     pass
@@ -72,7 +75,7 @@ class Xunion(_Union):
                     if (not (tuple2 == "EOF")):
                         self.qresults.put(tuple2)
                         
-                except Exception:
+                except Empty:
                     # This catch:
                     # Empty: in tuple2 = self.right.get(False), when the queue is empty.
                     pass
@@ -80,7 +83,7 @@ class Xunion(_Union):
 
     def differentVariables(self):
         # Executes the Xunion operator when the variables are not the same.
-
+        
         # Initialize tuples.
         tuple1 = None
         tuple2 = None
