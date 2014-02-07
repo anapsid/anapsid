@@ -1,0 +1,102 @@
+2014-02-07 17:58:05,764 - ANAPSID.Decomposer.decomposer - INFO - Decomposition Obtained
+2014-02-07 17:58:05,764 - ANAPSID.Decomposer.decomposer - INFO - SELECT DISTINCT *
+WHERE {
+     SERVICE <http://dbpedia-live.openlinksw.com/sparql> { 
+         ?bm1 <http://dbpedia.org/property/instrument> ?in1 . 
+         ?bm1 <http://dbpedia.org/ontology/individualisedPnd> ?pnd1 . 
+         ?bm1 <http://dbpedia.org/property/associatedActs> ?act1
+     }    . 
+     SERVICE <http://dbpedia-live.openlinksw.com/sparql> { 
+         ?cm1 <http://dbpedia.org/property/instrument> ?in2 . 
+         ?cm1 <http://dbpedia.org/property/associatedActs> ?act2
+     }    . 
+     SERVICE <http://dbpedia-live.openlinksw.com/sparql> { 
+         ?p <http://dbpedia.org/property/associatedActs> <http://dbpedia.org/resource/Enrique_Iglesias> . 
+         ?p <http://purl.org/dc/terms/subject> ?ss1 . 
+         ?p <http://dbpedia.org/ontology/associatedMusicalArtist> ?cm1 . 
+         ?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t1 . 
+         ?p <http://dbpedia.org/ontology/instrument> ?g1 . 
+         ?p <http://dbpedia.org/ontology/activeYearsStartYear> ?ac1 . 
+         ?p <http://dbpedia.org/ontology/associatedBand> ?bm1
+     }    . 
+     SERVICE <http://dbpedia-live.openlinksw.com/sparql> { 
+         ?g1 <http://xmlns.com/foaf/0.1/depiction> ?d1 . 
+         ?g1 <http://dbpedia.org/property/hasPhotoCollection> ?hp1 . 
+         ?g1 <http://dbpedia.org/ontology/thumbnail> ?th1 . 
+         ?g1 <http://www.w3.org/ns/prov#wasDerivedFrom> ?df1
+     }
+
+}
+2014-02-07 17:58:19,572 - ANAPSID.Decomposer.decomposer - INFO - Decomposition Obtained
+2014-02-07 17:58:19,573 - ANAPSID.Decomposer.decomposer - INFO - SELECT DISTINCT *
+WHERE {
+     SERVICE <http://dbpedia-live.openlinksw.com/sparql> { 
+         ?bm1 <http://dbpedia.org/property/instrument> ?in1 . 
+         ?bm1 <http://dbpedia.org/ontology/individualisedPnd> ?pnd1 . 
+         ?bm1 <http://dbpedia.org/property/associatedActs> ?act1
+     }    . 
+     SERVICE <http://dbpedia-live.openlinksw.com/sparql> { 
+         ?cm1 <http://dbpedia.org/property/instrument> ?in2 . 
+         ?cm1 <http://dbpedia.org/property/associatedActs> ?act2
+     }    . 
+     SERVICE <http://dbpedia-live.openlinksw.com/sparql> { 
+         ?p <http://dbpedia.org/property/associatedActs> <http://dbpedia.org/resource/Oscar_D'Le%C3%B3n> . 
+         ?p <http://purl.org/dc/terms/subject> ?ss1 . 
+         ?p <http://dbpedia.org/ontology/associatedMusicalArtist> ?cm1 . 
+         ?p <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t1 . 
+         ?p <http://dbpedia.org/ontology/instrument> ?g1 . 
+         ?p <http://dbpedia.org/ontology/activeYearsStartYear> ?ac1 . 
+         ?p <http://dbpedia.org/ontology/associatedBand> ?bm1
+     }    . 
+     SERVICE <http://dbpedia-live.openlinksw.com/sparql> { 
+         ?g1 <http://xmlns.com/foaf/0.1/depiction> ?d1 . 
+         ?g1 <http://dbpedia.org/property/hasPhotoCollection> ?hp1 . 
+         ?g1 <http://dbpedia.org/ontology/thumbnail> ?th1 . 
+         ?g1 <http://www.w3.org/ns/prov#wasDerivedFrom> ?df1
+     }
+
+}
+2014-02-07 17:59:04,859 - ANAPSID.Decomposer.decomposer - INFO - Decomposition Obtained
+2014-02-07 17:59:04,859 - ANAPSID.Decomposer.decomposer - INFO - SELECT DISTINCT ?o
+WHERE {
+     SERVICE <http://dbpedia.org/sparql> { 
+         ?d2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/class/yago/MonoclonalAntibody115029781> . 
+         ?d1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/class/yago/Antibody115027189> . 
+         ?d1 <http://dbpedia.org/property/routesOfAdministration> ?o . 
+         ?d2 <http://dbpedia.org/property/routesOfAdministration> ?o
+     }
+
+}
+2014-02-07 18:03:45,980 - ANAPSID.Decomposer.decomposer - INFO - Decomposition Obtained
+2014-02-07 18:03:45,981 - ANAPSID.Decomposer.decomposer - INFO - SELECT DISTINCT ?o
+WHERE {
+     SERVICE <http://dbpedia.org/sparql> { 
+         ?d1 <http://purl.org/dc/terms/subject> <http://dbpedia.org/resource/Category:Aminoglycoside_antibiotics> . 
+         ?d1 <http://dbpedia.org/property/routesOfAdministration> ?o . 
+         ?d1 <http://dbpedia.org/property/drugbank> ?dg1 . 
+         ?d1 <http://dbpedia.org/property/smiles> ?sm1 . 
+         ?d1 <http://dbpedia.org/property/stdinchikey> ?s1 . 
+         ?d1 <http://dbpedia.org/property/pubchem> ?pu1 . 
+         ?d1 <http://dbpedia.org/property/proteinBound> ?p1 . 
+         ?d1 <http://dbpedia.org/property/kegg> ?k1 . 
+         ?d1 <http://dbpedia.org/ontology/chEBI> ?c1 . 
+         ?d1 <http://dbpedia.org/property/excretion> ?e1 . 
+         ?d1 <http://dbpedia.org/property/unii> ?u1 . 
+         ?d1 <http://dbpedia.org/property/molecularWeight> ?m1
+     }    . 
+     SERVICE <http://dbpedia.org/sparql> { 
+         ?d2 <http://purl.org/dc/terms/subject> <http://dbpedia.org/resource/Category:Toxicology> . 
+         ?d2 <http://dbpedia.org/property/routesOfAdministration> ?o . 
+         ?d2 <http://dbpedia.org/property/drugbank> ?dg2 . 
+         ?d2 <http://dbpedia.org/property/smiles> ?sm2 . 
+         ?d2 <http://dbpedia.org/property/stdinchikey> ?s2 . 
+         ?d2 <http://dbpedia.org/property/pubchem> ?pu2 . 
+         ?d2 <http://dbpedia.org/property/proteinBound> ?p2 . 
+         ?d2 <http://dbpedia.org/property/kegg> ?k2 . 
+         ?d2 <http://dbpedia.org/ontology/chEBI> ?c2 . 
+         ?d2 <http://dbpedia.org/property/excretion> ?e2 . 
+         ?d2 <http://dbpedia.org/property/unii> ?u2 . 
+         ?d2 <http://dbpedia.org/property/molecularWeight> ?m2
+     }
+
+}

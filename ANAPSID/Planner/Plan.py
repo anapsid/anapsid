@@ -33,7 +33,7 @@ from ANAPSID.BlockingOperators.Union import Union
 from ANAPSID.Decomposer.Tree import Leaf, Node
 from ANAPSID.Decomposer.services import Service, Argument, Triple, Filter, Optional
 from ANAPSID.Decomposer.services import UnionBlock, JoinBlock, Query
-from SPARQLWrapper import SPARQLWrapper, JSON, N3
+#from SPARQLWrapper import SPARQLWrapper, JSON, N3
 import socket
 import urllib
 import httplib
