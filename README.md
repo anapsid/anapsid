@@ -14,12 +14,32 @@ Heuristic-Based Approach for Planning Federated SPARQL Queries. COLD
 Installing ANAPSID
 ==================
 
-ANAPSID is known to run on Debian GNU/Linux. The recommended way to
-install ANAPSID is to use Python 2.7 through VirtualEnv. Follow these
-instructions to get a working ANAPSID install:
+ANAPSID is known to run on Debian GNU/Linux. These instructions were tested 
+on the latest Debian Stable.  The recommended way to
+install ANAPSID is to use Python 2.7 through VirtualEnv. 
+
+At the very least, you will be needing a python interpreter and someway 
+to download the files. To satisfy the basic dependencies install on Debian: 
+
+`$ sudo apt-get install python build-essential curl git`
+
+If you cannot install CURL, we provide work arounds using wget. You can ignore the git
+dependency and download one of the releases from Github. The python
+and build-essential deps are required.
+
+Follow these instructions to get a working ANAPSID install:
+
 
 1. Install VirtualEnv. The easiest way to do this is installing
    [VirtualEnv Burrito](https://github.com/brainsik/virtualenv-burrito).
+
+   Using CURL:
+   
+   `curl -s https://raw.github.com/brainsik/virtualenv-burrito/master/virtualenv-burrito.sh | $SHELL`
+   
+   Using WGET:
+   
+   `wget https://raw2.github.com/brainsik/virtualenv-burrito/master/virtualenv-burrito.sh && sed -i 's/curl/wget -qO-/g' virtualenv-burrito.sh && bash virtualenv-burrito.sh`
 
 2. Once you install VirtualEnv Burrito, create a new VirtualEnv for
    your ANAPSID install:
@@ -39,9 +59,15 @@ instructions to get a working ANAPSID install:
 
    From now on, we assume you are working inside the ANAPSID VirtualEnv.
 
-3. Clone this repository using Git.
+3. Download ANAPSID.
+
+   You can do this by cloning this repository using Git.
 
    `$ git clone https://github.com/anapsid/anapsid.git ~/anapsid`
+   
+   OR
+
+   You can download the latest release from Github [here](https://github.com/anapsid/anapsid/releases) 
 
 4. Go to your local copy of ANAPSID and run:
 
