@@ -14,52 +14,12 @@ Heuristic-Based Approach for Planning Federated SPARQL Queries. COLD
 Installing ANAPSID
 ==================
 
-ANAPSID is known to run on Debian GNU/Linux. These instructions were tested 
-on the latest Debian Stable.  The recommended way to
-install ANAPSID is to use Python 2.7 through VirtualEnv. 
-
-At the very least, you will be needing a python interpreter and someway 
-to download the files. To satisfy the basic dependencies install on Debian: 
-
-`$ sudo apt-get install python build-essential curl git`
-
-If you cannot install CURL, we provide work arounds using wget. You can ignore the git
-dependency and download one of the releases from Github. The python
-and build-essential deps are required.
-
-Follow these instructions to get a working ANAPSID install:
+ANAPSID is known to run on Debian GNU/Linux and OS X. These instructions were tested 
+on the latest Debian Stable and OS X. The recommended way to
+execute ANAPSID is to use Python 2.7. 
 
 
-1. Install VirtualEnv. The easiest way to do this is installing
-   [VirtualEnv Burrito](https://github.com/brainsik/virtualenv-burrito).
-
-   Using CURL:
-   
-   `curl -s https://raw.github.com/brainsik/virtualenv-burrito/master/virtualenv-burrito.sh | $SHELL`
-   
-   Using WGET:
-   
-   `wget https://raw2.github.com/brainsik/virtualenv-burrito/master/virtualenv-burrito.sh && sed -i 's/curl/wget -qO-/g' virtualenv-burrito.sh && bash virtualenv-burrito.sh`
-
-2. Once you install VirtualEnv Burrito, create a new VirtualEnv for
-   your ANAPSID install:
-
-   `$ mkvirtualenv anapsid --no-site-packages`
-
-   Once you run this command you will be inside a dedicated VirtualEnv
-   for ANAPSID. It should automatically append (anapsid) at the beginning
-   of your command line. The only way to execute ANAPSID related commands
-   is by entering this VirtualEnv. You can do so, in the future by running:
-
-   `$ workon anapsid`
-
-   To exit the ANAPSID VirtualEnv, just run:
-
-   `$ deactivate`
-
-   From now on, we assume you are working inside the ANAPSID VirtualEnv.
-
-3. Download ANAPSID.
+1. Download ANAPSID.
 
    You can do this by cloning this repository using Git.
 
@@ -69,19 +29,19 @@ Follow these instructions to get a working ANAPSID install:
 
    You can download the latest release from Github [here](https://github.com/anapsid/anapsid/releases) 
 
-4. Go to your local copy of ANAPSID and run:
+2. Go to your local copy of ANAPSID and run:
 
    `$ pip install -r requirements.txt`
 
-   This will install ANAPSID's Python dependencies.
+   This will install ANAPSID's Python dependencies. Right now, the only library required to execute ANAPSID is ply 3.3 (https://pypi.python.org/pypi/ply/3.3)
 
-4. When step 3 is done you can now install ANAPSID. This will install
+3. When step 2 is done you can now install ANAPSID. This will install
    it only to your current user caged VirtualEnv as to prevent
    polluting Python's global site-packages.
 
    `$ python setup.py install`
 
-5. Go ahead and move to the next section on configuring ANAPSID.
+4. Go ahead and move to the next section on configuring ANAPSID.
 
 Setting up ANAPSID
 ==================
