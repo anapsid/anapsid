@@ -90,6 +90,25 @@ evaluated by a federation of endpoints. These are:
 1. Exclusive Groups (EG).
 2. Star-Shaped Group Single endpoint selection (SSGS). See [2].
 3. Star-Shaped Group Multiple endpoint selection (SSGM). See [2].
+ 
+Running FedBench with ANAPSID
+=============================
+FedBench (see http://fedbench.fluidops.net) is a benchmark for testing federated query processing on RDF data sets.
+
+In order to execute ANAPSID, it is necessary first to provide the endpoint descriptions. Endpoint descriptions are of the form <URLEndpoint> <LISTOfPredicates>. The file endpoints/endpointsFedBench provides 
+the description of the endpoints of the dataset collections in FedBench. The current URLs of the endpoints
+have to be included as follows:
+ <http://URLnytimes_dataset/sparql> URL of the NYTime endpoint
+ <http://URLchebi_dataset/sparql> URL of the Chebi endpoint
+ <http://URLSWDF_dataset/sparql> URL of the SW Dog Food endpoint
+ <http://URLdrugbank_dataset/sparql> URL of the Drugbank endpoint
+ <http://URLjamendo_dataset/sparql> URL of the Jamendo endpoint
+ <http://URLkegg_dataset/sparql> URL of the Kegg endpoint
+ <http://URLlinkedmdb_dataset/sparql> URL of the LinkedMDB endpoint
+ <http://URLSP2B/sparql> URL of the SP^2Bench 10M endpoint
+ <http://URLgeonames/sparql> URL of the Geonames endpoint
+ 
+The FedBench queries (see http://fedbench.fluidops.net/resource/Queries) are also available in the folder queries/fedbBench.  
 
 About and Contact
 =================
