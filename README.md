@@ -81,6 +81,41 @@ It will output a usage text and the options switches you can
 select. We run our experiments, however, using the scripts bundled on
 utils/ so you might want to check that out to get an idea.
 
+ANAPSID Parameters
+------------------
+Alternatively,  you can execute the following command to run a given query with ANAPSID:
+
+```
+$python $ANAPSIDROOT/mainAnapsid.py -e $ENDPOINTS -q $query -p <planType> -s False 
+-o False -d <TypeofDecompostion> -a True -w False [-k <special>]  [-V <typeOfEndpoint>] -r False
+```
+
+Where:
+
+`$ANAPSIDROOT`: directory where ANAPSID is stored.
+
+`$ENDPOINTS`: path and name of the file where the description of the endpoints is stored.
+
+`$query`: path and name of the filw where the query is stored.
+
+`<planType>`: can be **b** if the plan is bushy, **ll** is the plan is left linear, and **naive** for naive binary tree plan. 
+
+`-o`: can be True or False. **True** indicates that the input query is in SPARQL1-1 and no decomposition is needed; **False**, otherwise.
+
+`-d`: indicates the type of Decomposition. <TypeofDecompostion> can be **SSGM** (Star Shaped
+Group Multiple Endpoints), **SSGS** (Star Shaped Group Single Endpoint), **EG** (Exclusive Groups), Recommended SSGM.
+
+`-a`: indicates if the adaptive operators will be used. Recommended value **True**.
+
+`-w`:  can be True or False. Indicates if the cardinality of the queries will be estimated by contacting the sources (**True**) or by using a cost model (**False**). Turning True this feature may affect execution time.
+
+`-w`: can be y or c. The value **y** indicates that the plan will be produced, while **c** asks that decomposition. This parameter is optional, and should be set up only if the plan of the query wants to be produced. 
+
+`-r`: can be True or False. Use **True** if the answer of the query will be output and **False** if only a summary of the execution will be produced. 
+
+`-V`: can be True or False. **True** indicates if the endpoints to contact are Virtuoso, **False** is of any other type, e.g., OWLIM.
+
+
 Included query decomposing heuristics
 =====================================
 
