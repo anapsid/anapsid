@@ -529,6 +529,9 @@ def includePhysicalOperatorsOptional(left, rightList, a):
                 l = TreePlan(NestedHashOptional(left.vars, right.vars), all_variables, right, l)
                 dependent_op = True
                 #print "Planner CASE 2: nested loop optional swapping plan"
+            elif not(lowSelectivityLeft) and lowSelectivityRight  and not(isinstance(left, TreePlan) and (left.operator.__class__.__name__ == "NestedHashJoin" or left.operator.__class__.__name__ == "Xgjoin")) and not(isinstance(right.right,IndependentOperator)) and not(right.operator.__class__.__name__ == "NestedHashJoin" or right.operator.__class__.__name__ == "Xgjoin") and  (right.right.operator.__class__.__name__ == "Xunion"):
+                l = TreePlan(NestedHashOptional(left.vars, right.vars), all_variables, l, right)
+                dependent_op = True
             # Case 3: both operators are low selective
             else:
                  l =  TreePlan(Xgoptional(left.vars, right.vars), all_variables, l, right)
