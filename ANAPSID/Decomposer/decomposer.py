@@ -234,11 +234,10 @@ def readGeneralPredicates(fileName):
 #     return r
 
 # return the list of endpoints that are relevant providers of 'name'
-def domainProviders (l, name, genPred):
-
+def domainProviders (l, name, genPred, prefs):
     r = []
     for (epn, epl) in l:
-        if relevant(epl, name, genPred):
+        if relevant(epl, name, genPred, prefs):
             r.append(epn)
     return r
 
@@ -316,9 +315,9 @@ def getMostCommon(es):
     mc = [elem for (cant, elem) in ec if cant == c]
 
     return list(set(mc))
-
-def relevant(ls, p, gps):
-
+#MEV added prefs
+def relevant(ls, pred, gps,prefs):
+    p = getUri(pred, prefs) 
     sns = sameNameSpace(p, ls)
     gns = len(set(ls)-set(gps))
     return sns >= gns*0.5
@@ -374,7 +373,7 @@ def assignEndpointS(tl, l, genPred, prefixes, c):
             ts.remove(sg)
             continue
         elif (not (getUri(sg.predicate, prefixes) in genPred)) and (sg.predicate.constant):
-            ps = domainProviders(l, sg.predicate.name, genPred)
+            ps = domainProviders(l, sg.predicate, genPred, prefixes)
             if (len(ps) == 1):
                 p = ps[0]
                 qcl[p].append(sg)
@@ -386,10 +385,10 @@ def assignEndpointS(tl, l, genPred, prefixes, c):
         on = sg.theobject.name
         sn = sg.subject.name
         isLink = (getUri(sg.predicate, prefixes) in ['<http://www.w3.org/2002/07/owl#sameAs>', '<http://www.w3.org/2000/01/rdf-schema#seeAlso>'])
-        if ((not isLink) and sg.theobject.constant and isURI(on)):
-            ps = domainProviders(l, on, genPred)
-        if ((not isLink) and sg.subject.constant and isURI(sn)):
-            ps.extend(domainProviders(l, sn, genPred))
+        if ((not isLink) and (isURI(getUri(sg.theobject, prefixes) or sg.theobject.constant))):
+            ps = domainProviders(l, sg.theobject, genPred, prefixes)
+        if ((not isLink) and (isURI(getUri(sg.subject, prefixes) or sg.subject.constant))):
+            ps.extend(domainProviders(l, sg.subject, genPred, prefixes))
         ps = [e for e in ps if e in eps0]
         if (len(ps) == 1):
             p = ps[0]
@@ -404,17 +403,17 @@ def assignEndpointS(tl, l, genPred, prefixes, c):
         eps0 = ps
         ps1 = []
         if (not (getUri(sg.predicate, prefixes) in genPred)) and sg.predicate.constant:
-            ps1 = domainProviders(l, sg.predicate.name, genPred)
+            ps1 = domainProviders(l, sg.predicate, genPred, prefixes)
         if len(ps1) > 0:
             ps = ps1
         on = sg.theobject.name
         sn = sg.subject.name
         ps2 = []
         isLink = (getUri(sg.predicate, prefixes) in ['<http://www.w3.org/2002/07/owl#sameAs>', '<http://www.w3.org/2000/01/rdf-schema#seeAlso>'])
-        if ((not isLink) and sg.theobject.constant and isURI(on)):
-            ps2.extend(domainProviders(l, on, genPred))
-        if ((not isLink) and sg.subject.constant and isURI(sn)):
-            ps2.extend(domainProviders(l, sn, genPred))
+        if ((not isLink) and (isURI(getUri(sg.theobject, prefixes) or sg.theobject.constant))):
+            ps2.extend(domainProviders(l, sg.theobject, genPred, prefixes))
+        if ((not isLink) and (isURI(getUri(sg.subject, prefixes) or sg.subject.constant))):
+            ps2.extend(domainProviders(l, sg.subject, genPred, prefixes))
         ps2 = [e for e in ps2 if e in eps0]
         if len(ps1) == 0 and len(ps2) > 0:
             ps = ps2
@@ -458,41 +457,30 @@ def assignEndpointM(tl, l, genPred, prefixes, c):
             ts.remove(sg)
             continue
     for sg in ts:
-        #print 'sg.predicate'
-        #print sg.predicate
         ps = search(l, sg.predicate, prefixes)
-        #print 'ps'
-	#print ps
         eps0 = ps
         ps1 = []
         if (not (getUri(sg.predicate, prefixes) in genPred)) and sg.predicate.constant:
-            ps1 = domainProviders(l, sg.predicate.name, genPred)
+           ps1 = domainProviders(l, sg.predicate, genPred, prefixes)
         if len(ps1) > 0:
             ps = ps1
-        #print 'ps'
-	#print ps
         on = sg.theobject.name
         sn = sg.subject.name
         ps2 = []
         isLink = (getUri(sg.predicate, prefixes) in ['<http://www.w3.org/2002/07/owl#sameAs>', '<http://www.w3.org/2000/01/rdf-schema#seeAlso>'])
-        if ((not isLink) and sg.theobject.constant and isURI(on)):
-            ps2.extend(domainProviders(l, on, genPred))
-        if ((not isLink) and sg.subject.constant and isURI(sn)):
-            ps2.extend(domainProviders(l, sn, genPred))
+        if ((not isLink) and (isURI(getUri(sg.theobject, prefixes) or sg.theobject.constant))): 
+            ps2.extend(domainProviders(l, sg.theobject, genPred, prefixes))
+        if ((not isLink) and (isURI(getUri(sg.subject, prefixes) or sg.subject.constant))): 
+            ps2.extend(domainProviders(l, sg.subject, genPred, prefixes))
         ps2 = [e for e in ps2 if e in eps0]
         ps.extend(ps2)
-        #print sg.predicate
-	#print ps
         ps3 = getMostCommon(getEndpoints(potentialStarS(sg, tl), qcl0))
         ps3 = [e for e in ps3 if e in eps0]
         if len(ps1) == 0 and len(ps2) == 0 and len(ps3) > 0:
            ps = ps3
         else:
            ps.extend(ps3)
-        #print 'ps'
-	#print ps
         p = selectCurrentBest(ps, sg, qcl0, prefixes, genPred, c)
-        #print p
         if len(p) == 1:
              p = p[0]
              qcl0[p].append(sg)
