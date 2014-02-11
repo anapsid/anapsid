@@ -21,7 +21,7 @@ if __name__ == '__main__':
         m = {}
         for endpoint in endpoints:
             q = Queue()
-            contactSource(endpoint, QUERY, q)
+            contactSource(endpoint, QUERY, q, 16384, 10000) 
             m[endpoint] = [p for p in get_predicates(q)]
 
     result = []
