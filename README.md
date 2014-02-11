@@ -86,7 +86,7 @@ ANAPSID Parameters
 Alternatively,  you can execute the following command to run a given query with ANAPSID:
 
 ```
-$python $ANAPSIDROOT/mainAnapsid.py -e $ENDPOINTS -q $query -p <planType> -s False 
+$python $ANAPSIDROOT/run_anapsid -e $ENDPOINTS -q $query -p <planType> -s False 
 -o False -d <TypeofDecompostion> -a True -w False [-k <special>]  [-V <typeOfEndpoint>] -r False
 ```
 
