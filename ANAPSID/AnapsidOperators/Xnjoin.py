@@ -23,6 +23,10 @@ class Xnjoin(Join):
         newvars = self.vars - set(d.keys())
         return Xnjoin(newvars)
 
+    def instantiateFilter(self, instantiated_vars, filter_str):
+        newvars = self.vars - set(instantiated_vars)
+        return Xnjoin(newvars)
+
     def execute(self, left, right, out):
         # Executes the Xgjoin.
         self.left     = left

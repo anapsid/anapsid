@@ -27,6 +27,11 @@ class Xgoptional(Optional):
         newvars_right = self.vars_right - set(d.keys())
         return Xgoptional(newvars_left, newvars_right)
 
+    def instantiateFilter(self, instantiated_vars, filter_str):
+        newvars_left = self.vars_left - set(instantiated_vars)
+        newvars_right = self.vars_right - set(instantiated_vars)
+        return Xgoptional(newvars_left, newvars_right)
+
     def execute(self, left, right, out):
         # Executes the Xgoptional.
         self.left     = left
