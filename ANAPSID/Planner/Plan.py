@@ -20,6 +20,10 @@ from ANAPSID.AnapsidOperators.Xnoptional import Xnoptional
 from ANAPSID.AnapsidOperators.Xunion import Xunion
 from ANAPSID.AnapsidOperators.Xproject import Xproject
 from ANAPSID.AnapsidOperators.Xdistinct import Xdistinct
+from ANAPSID.AnapsidOperators.Xlimit import Xlimit
+from ANAPSID.AnapsidOperators.Xoffset import Xoffset
+from ANAPSID.AnapsidOperators.Xorderby import Xorderby
+from ANAPSID.AnapsidOperators.Xfilter import Xfilter
 from ANAPSID.NonBlockingOperators.SymmetricHashJoin import SymmetricHashJoin
 #from ANAPSID.NonBlockingOperators.NestedHashJoin import NestedHashJoin
 from ANAPSID.NonBlockingOperators.NestedHashJoinFilter import NestedHashJoinFilter as NestedHashJoin
@@ -472,6 +476,19 @@ def createPlan(query, adaptive, wc, buffersize, c, endpointType):
     # Adds the distinct operator to the plan.
     if (query.distinct):
         operatorTree = TreePlan(Xdistinct(None), operatorTree.vars, operatorTree)
+	
+    # Adds the offset operator to the plan.
+    if (query.offset != -1):
+        operatorTree = TreePlan(Xoffset(None, query.offset), operatorTree.vars, operatorTree)
+
+    # Adds the limit operator to the plan. 
+    if (query.limit != -1):
+        #print "query.limit", query.limit
+        operatorTree = TreePlan(Xlimit(None, query.limit), operatorTree.vars, operatorTree)
+
+    # Adds the order by operator to the plan. 
+    if (len(query.order_by) > 0):
+        operatorTree = TreePlan(Xorderby(query.order_by), operatorTree.vars, operatorTree)
 
     #print "operator type:", operatorTree
     return operatorTree
@@ -500,7 +517,10 @@ def includePhysicalOperatorsUnionBlock(query, ub, a, wc, buffersize, c):
         r.append(n)
 
     if len(r) == 1:
-        return r[0]
+        n = r[0]
+        for f in ub.filters:
+           n = TreePlan(Xfilter(f),n.vars,n)
+        return n
     else:
         return None
 
@@ -529,7 +549,7 @@ def includePhysicalOperatorsOptional(left, rightList, a):
                 l = TreePlan(NestedHashOptional(left.vars, right.vars), all_variables, right, l)
                 dependent_op = True
                 #print "Planner CASE 2: nested loop optional swapping plan"
-            elif not(lowSelectivityLeft) and lowSelectivityRight  and not(isinstance(left, TreePlan) and (left.operator.__class__.__name__ == "NestedHashJoin" or left.operator.__class__.__name__ == "Xgjoin")) and not(isinstance(right.right,IndependentOperator)) and not(right.operator.__class__.__name__ == "NestedHashJoin" or right.operator.__class__.__name__ == "Xgjoin") and  (right.right.operator.__class__.__name__ == "Xunion"):
+            elif not(lowSelectivityLeft) and lowSelectivityRight  and not(isinstance(left, TreePlan) and (left.operator.__class__.__name__ == "NestedHashJoin" or left.operator.__class__.__name__ == "Xgjoin")) and not(isinstance(right,IndependentOperator)) and not(right.operator.__class__.__name__ == "NestedHashJoin" or right.operator.__class__.__name__ == "Xgjoin") and  (right.operator.__class__.__name__ == "Xunion"):
                 l = TreePlan(NestedHashOptional(left.vars, right.vars), all_variables, l, right)
                 dependent_op = True
             # Case 3: both operators are low selective
@@ -565,6 +585,7 @@ def includePhysicalOperatorsJoinBlock(query, jb, a, wc, buffersize, c):
 
     tl = []
     ol = []
+    
     if isinstance(jb.triples, list):
         for bgp in jb.triples:
             if isinstance(bgp, Node) or isinstance(bgp, Leaf):
@@ -578,9 +599,9 @@ def includePhysicalOperatorsJoinBlock(query, jb, a, wc, buffersize, c):
                                                              bgp, a, wc, buffersize, c))
     elif isinstance(jb.triples, Node) or isinstance(jb.triples, Leaf):
         tl = [includePhysicalOperators(query, jb.triples, a, wc, buffersize, c)]
+        
     else: # this should never be the case..
         pass
-        #print "type of triples: "+str(type(jb.triples))
 
     while len(tl) > 1:
         l = tl.pop(0)
@@ -616,10 +637,7 @@ def includePhysicalOperatorJoin(a, wc, l, r):
         #    c = (lsc <= 30)
         #    if c and not lowSelectivityRight:
         #        c = c and (lsc <= 0.3*r.getCardinality())
-        
         dependent_join = False
-        #print "entre"
-        #print r
         #if (noInstantiatedRightStar) or ((not wc) and (l.constantPercentage() >= 0.5) and (len(join_variables) > 0) and c):
         # Case 1: left operator is highly selective and right operator is low selective
 	if not(lowSelectivityLeft) and lowSelectivityRight  and not(isinstance(r, TreePlan)):
@@ -627,16 +645,16 @@ def includePhysicalOperatorJoin(a, wc, l, r):
             dependent_join = True
             #print "Planner CASE 1: nested loop", type(r)
         # Case 2: left operator is low selective and right operator is highly selective
-	elif lowSelectivityLeft and not(lowSelectivityRight) and not(isinstance(r, TreePlan)):
+	elif lowSelectivityLeft and not(lowSelectivityRight) and not(isinstance(l, TreePlan)):
 	    n = TreePlan(NestedHashJoin(join_variables), all_variables, r, l)
             dependent_join = True
             #print "Planner CASE 2: nested loop swapping plan", type(r)
-        elif not(lowSelectivityLeft) and lowSelectivityRight  and not(isinstance(l, TreePlan) and (l.operator.__class__.__name__ == "NestedHashJoin" or l.operator.__class__.__name__ == "Xgjoin")) and not(isinstance(r.right,IndependentOperator)) and not(r.operator.__class__.__name__ == "NestedHashJoin" or r.operator.__class__.__name__ == "Xgjoin") and  (r.right.operator.__class__.__name__ == "Xunion"):
-        #elif not(isinstance(r,IndependentOperator)) and not(isinstance(r.left,IndependentOperator)) and (r.left.operator.__class__.__name__ == "Xunion"):
+        elif not(lowSelectivityLeft) and lowSelectivityRight  and (not(isinstance(l, TreePlan)) or not(l.operator.__class__.__name__ == "NestedHashJoinFilter" )) and (not(isinstance(r,TreePlan)) or not(r.operator.__class__.__name__ == "Xgjoin" or r.operator.__class__.__name__ == "NestedHashJoinFilter")):
             n = TreePlan(NestedHashJoin(join_variables), all_variables, l, r)
             dependent_join = True
             #print "Planner case 2.5", type(r)
         # Case 3: both operators are low selective
+
 	else:
 	    n =  TreePlan(Xgjoin(join_variables), all_variables, l, r)
             #print "Planner CASE 3: xgjoin"
@@ -660,7 +678,6 @@ def includePhysicalOperatorJoin(a, wc, l, r):
             if ((n.right.constantNumber() + new_constants)/n.right.places() <= 0.5) and not(n.right.tree.service.allTriplesGeneral()):
                 n.right.tree.service.limit = 10000 # Fixed value, this can be learnt in the future
                 #print "modifying limit right ..."
-    #print "sali", n
     return n
 
 
@@ -709,7 +726,13 @@ def includePhysicalOperators(query, tree, a, wc, buffersize, c):
                                                 a, wc, buffersize, c)
         right_subtree = includePhysicalOperators(query, tree.right,
                                                  a, wc, buffersize, c)
-        return includePhysicalOperatorJoin(a, wc, left_subtree, right_subtree)
+        if (tree.filters == []):
+           return includePhysicalOperatorJoin(a, wc, left_subtree, right_subtree)
+        else:
+           n = includePhysicalOperatorJoin(a, wc, left_subtree, right_subtree)
+           for f in tree.filters:
+               n = TreePlan(Xfilter(f),n.vars,n)
+        return n 
 
 class IndependentOperator(object):
     '''
@@ -1074,3 +1097,5 @@ class TreePlan(object):
                              args=(qleft, qright, outputqueue,))
             # Execute the plan
             self.p.start()
+
+
