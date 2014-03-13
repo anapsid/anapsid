@@ -136,12 +136,15 @@ class Service(object):
 
 class Query(object):
 
-    def __init__(self, prefs, args, body, distinct, filter_nested=''):
+    def __init__(self, prefs, args, body, distinct, order_by=[], limit=-1, offset=-1, filter_nested=''):
         self.prefs = prefs
         self.args = args
         self.body = body
         self.distinct = distinct
         self.join_vars = self.getJoinVars()
+        self.order_by = order_by
+        self.limit = limit
+        self.offset = offset
         self.filter_nested = filter_nested
         genPred = readGeneralPredicates(os.path.join(os.path.split(os.path.split(__file__)[0])[0],
                                                      'Catalog','generalPredicates'))
@@ -157,7 +160,7 @@ class Query(object):
             d = "DISTINCT "
         else:
             d = ""
-        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {\n"+body_str+"\n"+self.filter_nested+"\n}"
+        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {\n"+body_str+"\n"+self.filter_nested+"\n}" 
 
     def instantiate(self, d):
         new_args = []
@@ -322,7 +325,7 @@ def aux2(e,x, op):
     return ""
 
 class UnionBlock(object):
-    def __init__(self, triples, filters=''):
+    def __init__(self, triples,filters=[]):
         self.triples = triples
         self.filters = filters
 
@@ -333,7 +336,7 @@ class UnionBlock(object):
 
         n = nest(self.triples)
         if n:
-            return aux(n, w, " UNION ") + self.filters
+            return aux(n, w, " UNION ") + " ".join(map(str, self.filters)) 
         else:
             return " "
 
@@ -379,7 +382,7 @@ class UnionBlock(object):
     def show2(self, w):
         n = nest(self.triples)
         if n:
-            return aux2(n, w, " UNION ") + self.filters
+            return aux2(n, w, " UNION ") + + " ".join(map(str, self.filters)) 
         else:
             return " "
 
@@ -433,9 +436,10 @@ def nest(l):
         return None
 
 class JoinBlock(object):
-    def __init__(self, triples, filters=''):
+    def __init__(self, triples, filters=[], filters_str=''):
         self.triples = triples
         self.filters = filters
+        self.filters_str = filters_str
 
     def __repr__(self):
         r = ""
@@ -480,25 +484,26 @@ class JoinBlock(object):
     def show(self, x):
 
         if isinstance(self.triples, list):
-            n = nest(self.triples)
-            if n:
-                return aux(n, x, " . ") + self.filters
-            else:
-                return " "
+            return ". ".join(map(str, self.triples)) + " ".join(map(str, self.filters)) + self.filters_str
+            #n = nest(self.triples)
+            #if n:
+            #    return aux(n, x, " . ") + " ".join(map(str, self.filters)) + self.filters_str
+            #else:
+            #    return " "
         else:
             return self.triples.show(x)
 
     def instantiate(self, d):
         if isinstance(self.triples, list):
              ts = [t.instantiate(d) for t in self.triples]
-             return JoinBlock(ts)
+             return JoinBlock(ts,self.filters)
         else:
              return self.triples.instantiate(d)
 
     def instantiateFilter(self, d, filter_str):
         if isinstance(self.triples, list):
              ts = [t.instantiateFilter(d, filter_str) for t in self.triples]
-             return JoinBlock(ts, filter_str)
+             return JoinBlock(ts, self.filters, filter_str)
         else:
              return self.triples.instantiateFilter(d, filter_str)
 
@@ -506,7 +511,7 @@ class JoinBlock(object):
         if isinstance(self.triples, list):
             n = nest(self.triples)
             if n:
-                return aux2(n, x, " . ") + self.filters
+                return aux2(n, x, " . ") + str(self.filters) + self.filters_str
             else:
                 return " "
         else:
@@ -562,13 +567,29 @@ class Filter(object):
         self.expr = expr
 
     def __repr__(self):
-        return ("\n        FILTER ("+str(self.expr)+")")
+        if (self.expr.op == 'REGEX' or self.expr.op == 'sameTERM' or self.expr.op == 'langMATCHES' ):
+          if (self.expr.op == 'REGEX' and self.expr.right.desc !=False):
+            return "\n"+"FILTER " + self.expr.op + "("+str(self.expr.left)+","+ self.expr.right.name + ","+ self.expr.right.desc+")"
+          else:
+            return "\n"+"FILTER " + self.expr.op + "("+str(self.expr.left)+","+str(self.expr.right)+")"
+        else:
+          return "\n"+"FILTER ("+str(self.expr)+")"
+      
 
     def show(self, x):
+      if (self.expr.op == 'REGEX'):
+        if (self.expr.right.desc !=False):
+           return "\n"+"FILTER " + self.expr.op + "("+str(self.expr.left)+","+ self.expr.right.name + ","+ self.expr.right.desc+")"
+        else:
+           return "\n"+x+"FILTER regex("+str(self.expr.left)+","+str(self.expr.right)+")"
+      else:
         return "\n"+x+"FILTER ("+str(self.expr)+")"
 
     def getVars(self):
         return self.expr.getVars()
+    
+    def getPredVars(self):
+        return []
 
     def setGeneral(self, ps, genPred):
         return
@@ -638,10 +659,21 @@ class Expression(object):
         self.right = right
 
     def __repr__(self):
-        return (str(self.left)+" "+ self.op +" "+str(self.right))
+        if (self.op == '!' or self.op == 'BOUND' or self.op == 'ISIRI' or self.op == 'ISURI' or self.op == 'ISBLANK' or self.op == 'ISLITERAL' or self.op == 'STR' or self.op == 'LANG' or self.op == 'DATATYPE'):
+          return (self.op +"("+ str(self.left) + ")")
+        elif (self.op == 'REGEX' or self.op == 'SAMETERM' or self.op == 'LANGMATCHES'):
+            if (self.op == 'REGEX' and self.right.desc!=False):
+              return (self.op + "("+ str(self.left) + "," + self.right.name + "," + self.right.desc + ")")
+            else:
+              return (self.op + "("+ str(self.left) + "," + str(self.right) + ")")
+        else:
+          return (str(self.left)+" "+ self.op +" "+str(self.right))
 
     def getVars(self):
-        return self.left.getVars()+self.right.getVars()
+        if (self.op=='REGEX' or self.op=='!' or self.op == 'BOUND' or self.op == 'ISIRI' or self.op == 'ISURI' or self.op == 'ISBLANK' or self.op == 'ISLITERAL' or self.op == 'STR' or self.op == 'LANG' or self.op == 'DATATYPE'):
+          return self.left.getVars()
+        else:
+          return self.left.getVars()+self.right.getVars()
 
     def instantiate(self, d):
         return Expression(self.op, self.left.instantiate(d),
@@ -760,9 +792,10 @@ class Triple(object):
         return self.constantNumber()/self.places()
 
 class Argument(object):
-    def __init__(self, name, constant):
+    def __init__(self, name, constant, desc=False):
         self.name = name
         self.constant = constant
+        self.desc = desc
 
     def __repr__(self):
         return self.name
@@ -831,3 +864,5 @@ def getPrefs(ps):
          v = p[(pos+1):len(p)].strip()
          prefDict[c] = v
     return prefDict
+
+

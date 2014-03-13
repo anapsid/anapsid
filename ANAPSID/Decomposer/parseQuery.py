@@ -11,16 +11,36 @@ reserved = {
     'SELECT' : 'SELECT',
     'DISTINCT' : 'DISTINCT',
     'WHERE' : 'WHERE',
-    'PREFIX' : 'PREFIX'
+    'PREFIX' : 'PREFIX',
+    'LIMIT': 'LIMIT',
+    'OFFSET': 'OFFSET',
+    'ORDER': 'ORDER',
+    'BY': 'BY',
+    'DESC': 'DESC',
+    'ASC' : 'ASC',
+    'BOUND': 'BOUND',
+    'REGEX': 'REGEX',
+    'ISIRI': 'ISIRI',
+    'ISURI': 'ISURI',
+    'ISBLANK': 'ISBLANK',
+    'ISLITERAL': 'ISLITERAL',
+    'LANG': 'LANG',
+    'DATATYPE': 'DATATYPE',
+    'SAMETERM': 'SAMETERM',
+    'LANGMATCHES': 'LANGMATCHES',
+    'STR': 'STR',
+    'UPPERCASE': 'UPPERCASE'
 }
 
 tokens = [
     "CONSTANT",
+    "NUMBER",
     "VARIABLE",
     "LKEY",
     "RKEY",
     "COLON",
     "POINT",
+    "COMA",
     "URI",
     "ALL",
     "LPAR",
@@ -31,33 +51,51 @@ tokens = [
     "LESSEQ",
     "GREATER",
     "GREATEREQ",
-    "ID"#,
-#    "PREF",
-#    "COLON"
-     ] + list(reserved.values())
+    "ID",
+    "NEG",
+    "AND",
+    "PLUS",
+    "MINUS",
+    "TIMES",
+    "DIV",
+    "DOUBLE",
+    "INTEGER",
+    "DECIMAL",
+    "FLOAT",
+    "STRING",
+    "BOOLEAN",
+    "DATETIME",
+    "NONPOSINT",
+    "NEGATIVEINT",
+    "LONG",
+    "INT",
+    "SHORT",
+    "BYTE",
+    "NONNEGINT",
+    "UNSIGNEDLONG",
+    "UNSIGNEDINT",
+    "UNSIGNEDSHORT",
+    "UNSIGNEDBYTE",
+    "POSITIVEINT",
+    "OR"
+    ] + list(reserved.values())
 
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9\-]*'
     t.type = reserved.get(t.value.upper(),'ID')    # Check for reserved words
     return t
 
-t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@[a-z][a-z])?" #According to ISO 639-1, lang tags are specified with two letters.
-#t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')(@en)?"
+t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')((@[a-z][a-z]) | (\^\^\w+))?" 
+t_NUMBER = r"([0-9])+"
 t_VARIABLE = r"([\?]|[\$])([A-Z]|[a-z])\w*"
 t_LKEY = r"\{"
 t_LPAR = r"\("
 t_RPAR = r"\)"
 t_COLON = r"\:"
+#t_RKEY = r"(\.)?\}"
 t_RKEY = r"(\.)?\s*\}"
-#t_SELECT = r"\S\E\L\E\C\T" +"\s"+r"\D\I\S\T\I\N\C\T"
-#t_SELECT = r"[S|s][E|e][L|l][E|e][C|c][T|t]" +"\s"+r"([D|d][I|i][S|s][T|t][I|i][N|n][C|c][T|t])?"
-#t_WHERE = r"[W|w][H|h][E|e][R|r][E|e]"
 t_POINT = r"\."
-#t_PREFIX = r"(PREFIX)|(\prefix)"
-#t_PREF = r"[^ \t\n\r\f\v\:]+"
-#t_COLON = r"\:"
-#t_PRED0 = r"\#[^ \t\n\r\f\v\.](\S)*"+":"+r"(\s)?(\S)+"
-#t_PRED1 = r"\#[^ \t\n\r\f\v\.](\S)*"+":"+r"(\s)?<"+"\S+"+r">"
+t_COMA = r"\,"
 t_EQUALS = r"="
 t_NEQUALS = r"\!="
 t_LESS = r"<"
@@ -66,6 +104,32 @@ t_GREATER = r">"
 t_GREATEREQ = r">="
 t_URI = r"<\S+>"
 t_ALL = r"\*"
+t_NEG  =  r"\!"
+t_AND = r"\&\&"
+t_OR = r"\|\|"
+t_PLUS = r"\+"
+t_MINUS = r"\-"
+t_TIMES = r"\*"
+t_DIV = r"/"
+t_DOUBLE = r"xsd\:double"
+t_INTEGER = r"xsd\:integer"
+t_DECIMAL = r"xsd\:decimal"
+t_FLOAT = r"xsd\:float"
+t_STRING = r"xsd\:string"
+t_BOOLEAN = r"xsd\:boolean"
+t_DATETIME = r"xsd\:dateTime"
+t_NONPOSINT = r"xsd\:nonPositiveInteger"
+t_NEGATIVEINT = r"xsd\:negativeInteger"
+t_LONG = r"xsd\:long"
+t_INT = r"xsd\:int"
+t_SHORT = r"xsd\:short"
+t_BYTE = r"xsd\:byte"
+t_NONNEGINT = r"xsd\:nonNegativeInteger"
+t_UNSIGNEDLONG = r"xsd\:unsignedLong"
+t_UNSIGNEDINT = r"xsd\:unsignedInt"
+t_UNSIGNEDSHORT = r"xsd\:unsignedShort"
+t_UNSIGNEDBYTE = r"xsd\:unsignedByte"
+t_POSITIVEINT = r"xsd\:positiveInteger"
 
 t_ignore = ' \t\n'
 
@@ -77,26 +141,16 @@ def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-# Compute column. 
-#     input is the input text string
-#     token is a token instance
-#def find_column(input,token):
-#    last_cr = input.rfind('\n',0,token.lexpos)
-#    if last_cr < 0:
-#	last_cr = 0
-#    column = (token.lexpos - last_cr) + 1
-#    return column
-
 lexer = lex.lex()
 
 # Parser
 
 def p_parse_sparql(p):
     """
-    parse_sparql : prefix_list query
+    parse_sparql : prefix_list query order_by limit offset 
     """
     (vs, ts, d) = p[2]
-    p[0] = Query(p[1], vs, ts, d)
+    p[0] = Query(p[1], vs, ts, d,p[3],p[4],p[5])
 
 def p_prefix_list(p):
     """
@@ -122,12 +176,6 @@ def p_prefix(p):
     """
     p[0] = p[2]
 
-#def p_pref(p):
-#    """
-#    pref : uri
-#    """
-#    p[0] = p[1]
-
 def p_uri_0(p):
     """
     uri : ID COLON ID
@@ -145,6 +193,78 @@ def p_uri_2(p):
     uri : URI
     """
     p[0] = p[1]
+
+def p_order_by_0(p):
+    """
+    order_by : ORDER BY var_order_list desc_var
+    """
+    p[0] = p[3] + [p[4]]
+
+def p_order_by_1(p):
+    """
+    order_by : empty
+    """
+    p[0] = []
+
+def p_var_order_list_0(p):
+    """
+    var_order_list : empty
+    """
+    p[0] = []
+
+def p_var_order_list_1(p):
+    """
+    var_order_list : var_order_list desc_var
+    """
+    p[0] = p[1] + [p[2]]
+
+def p_desc_var_0(p):
+    """
+    desc_var : DESC LPAR VARIABLE RPAR
+    """
+    p[0] = Argument(p[3],False,True)
+
+def p_desc_var_1(p):
+    """
+    desc_var : VARIABLE
+    """
+    p[0] = Argument(p[1],False,False)
+
+def p_desc_var_2(p):
+    """
+    desc_var : ASC LPAR VARIABLE RPAR
+    """
+    p[0] = Argument(p[3],False,False)
+
+def p_desc_var_3(p):
+    """
+    desc_var : unary_func LPAR desc_var RPAR
+    """
+    p[0] = Expression(p[1],p[3],None)
+
+def p_limit_0(p):
+    """
+    limit : LIMIT NUMBER
+    """
+    p[0] = p[2]
+    
+def p_limit_1(p):
+    """
+    limit : empty
+    """
+    p[0] = -1
+
+def p_offset_0(p):
+    """
+    offset : OFFSET NUMBER
+    """
+    p[0] = p[2]
+
+def p_offset_1(p):
+    """
+    offset : empty
+    """
+    p[0] = -1
 
 def p_query_0(p):
     """
@@ -190,11 +310,23 @@ def p_rest_union_block_0(p):
 
 def p_rest_union_block_1(p):
     """
-    rest_union_block : UNION join_block rest_union_block
+    rest_union_block : UNION LKEY join_block rest_union_block RKEY
     """
-    p[0] = [JoinBlock(p[2])] + p[3]
+    p[0] = [JoinBlock(p[3])] + p[4]
 
-def p_join_block(p):
+def p_join_block_0(p):
+    """
+    join_block : LKEY bgp rest_join_block RKEY rest_join_block 
+    """
+    jb_list = [p[2]]+ p[3]
+    if (p[5]!=[] and isinstance(p[5][0],Filter)):
+      p[0] = [UnionBlock([JoinBlock(jb_list)])] + p[5]
+    elif isinstance(p[2],UnionBlock):
+      p[0] =  [p[2]]+ p[3] + p[5]
+    else:       
+      p[0] = [UnionBlock([JoinBlock(jb_list)])] + p[5]
+
+def p_join_block_1(p):
     """
     join_block : bgp rest_join_block 
     """
@@ -218,30 +350,334 @@ def p_rest_join_block_2(p):
     """
     p[0] = [p[1]]+p[2]
 
-
 def p_bgp_0(p):
+    """
+    bgp :  LKEY join_block UNION join_block rest_union_block RKEY
+    """
+    ggp = [JoinBlock(p[2])] + [JoinBlock(p[4])] + p[5]
+    p[0] = UnionBlock(ggp)
+
+
+def p_bgp_1(p):
     """
     bgp : triple
     """
     p[0] = p[1]
 
-def p_bgp_1(p):
+def p_bgp_2(p):
     """
     bgp : FILTER LPAR expression RPAR
     """
     p[0] = Filter(p[3])
 
-def p_bgp_2(p):
+def p_bgp_3(p):
+    """
+    bgp : FILTER express_rel 
+    """
+    p[0] = Filter(p[2])
+
+def p_bgp_4(p):
     """
     bgp : OPTIONAL LKEY group_graph_pattern RKEY
     """
     p[0] = Optional(p[3])
 
-def p_bgp_3(p):
+def p_bgp_5(p):
     """
-    bgp : LKEY group_graph_pattern RKEY
+    bgp : LKEY join_block rest_union_block RKEY
+    """
+    bgp_arg = p[2] + p[3]
+    p[0] = UnionBlock(JoinBlock(bgp_arg))
+
+def p_expression_0(p):
+    """
+    expression : express_rel LOGOP expression
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+
+def p_expression_1(p):
+    """
+    expression : express_rel 
+    """
+    p[0] = p[1]
+
+def p_expression_2(p):
+    """
+    expression : LPAR expression RPAR
+    """
+    p[0] = p[2] 
+
+def p_express_rel_0(p):
+    """
+    express_rel : express_arg RELOP express_rel
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+
+def p_express_rel_1(p):
+    """
+    express_rel : express_arg
+    """
+    p[0] = p[1]                        
+
+def p_express_rel_2(p):
+    """
+    express_rel : LPAR express_rel RPAR
     """
     p[0] = p[2]
+
+def p_express_rel_3(p):
+    """
+    express_rel : NEG LPAR expression RPAR 
+    """
+    p[0] = Expression(p[1],p[3],None)
+
+def p_express_rel_4(p):
+    """
+    express_rel : NEG express_rel 
+    """
+    p[0] = Expression(p[1],p[2],None)
+
+
+def p_express_arg_0(p):
+    """
+    express_arg : uri
+    """
+    p[0] = Argument(p[1], True)
+
+def p_express_arg_1(p):
+    """
+    express_arg : VARIABLE
+    """
+    p[0] = Argument(p[1], False)
+
+def p_express_arg_2(p):
+    """
+    express_arg : CONSTANT
+    """
+    p[0] = Argument(p[1], True)
+
+def p_express_arg_3(p):
+    """
+    express_arg : NUMBER 
+    """
+    p[0] = Argument(p[1], True)
+
+def p_express_arg_4(p):
+    """
+    express_arg : REGEX LPAR express_arg COMA pattern_arg regex_flag
+    """
+    p[0] = Expression("REGEX",p[3],Argument(p[5],False,p[6]))
+
+def p_regex_flags_0(p):
+    """
+    regex_flag : RPAR 
+    """
+    p[0] = False
+
+def p_regex_flags_1(p):
+    """
+    regex_flag : COMA pattern_arg RPAR
+    """
+    p[0] = p[2]
+
+def p_pattern_arg_0(p):
+    """
+    pattern_arg : CONSTANT
+    """
+    p[0] = p[1]
+
+
+def p_express_arg_5(p):
+    """
+    express_arg : binary_func LPAR express_arg COMA express_arg RPAR
+    """
+    p[0] = Expression(p[1],p[3],p[5])
+
+def p_express_arg_6(p):
+    """
+    express_arg : unary_func LPAR express_arg RPAR
+    """
+    p[0] = Expression(p[1],p[3],None)
+
+def p_express_arg_7(p):
+    """
+    express_arg : express_arg ARITOP express_arg
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+ 
+def p_express_arg_8(p):
+    """
+    express_arg : LPAR express_arg RPAR
+    """
+    p[0] = p[2]
+
+def p_arit_op_0(p):
+    """
+    ARITOP : PLUS
+    """
+    p[0] = p[1]
+
+def p_arit_op_1(p):
+    """
+    ARITOP : MINUS
+    """
+    p[0] = p[1]
+
+def p_arit_op_2(p):
+    """
+    ARITOP : TIMES
+    """
+    p[0] = p[1]
+
+def p_arit_op_3(p):
+    """
+    ARITOP : DIV
+    """
+    p[0] = p[1]
+
+def p_logical_op_0(p):
+    """
+    LOGOP : AND
+    """
+    p[0] = p[1]
+
+def p_logical_op_1(p):
+    """
+    LOGOP : OR
+    """
+    p[0] = p[1]
+
+def p_relational_op_0(p):
+    """
+    RELOP : EQUALS
+    """
+    p[0] = p[1]
+
+def p_relational_op_1(p):
+    """
+    RELOP : LESS
+    """
+    p[0] = p[1]
+
+def p_relational_op_2(p):
+    """
+    RELOP : LESSEQ
+    """
+    p[0] = p[1]
+
+def p_relational_op_3(p):
+    """
+    RELOP : GREATER
+    """
+    p[0] = p[1]
+
+def p_relational_op_4(p):
+    """
+    RELOP : GREATEREQ
+    """
+    p[0] = p[1]
+
+def p_relational_op_5(p):
+    """
+    RELOP : NEQUALS
+    """
+    p[0] = p[1]
+
+def p_binary_0(p):
+    """
+    binary_func : REGEX
+    """
+    p[0] = p[1]
+
+def p_binary_1(p):
+    """
+    binary_func : SAMETERM
+    """
+    p[0] = p[1]
+
+def p_binary_2(p):
+    """
+    binary_func : LANGMATCHES
+    """
+    p[0] = p[1]
+
+def p_unary_0(p):
+    """
+    unary_func : BOUND
+    """
+    p[0] = p[1]
+
+def p_unary_1(p):
+    """
+    unary_func : ISIRI
+    """
+    p[0] = p[1]
+
+def p_unary_2(p):
+    """
+    unary_func : ISURI
+    """
+    p[0] = p[1]
+
+def p_unary_3(p):
+    """
+    unary_func : ISBLANK 
+    """
+    p[0] = p[1]
+
+def p_unary_4(p):
+    """
+    unary_func : ISLITERAL
+    """
+    p[0] = p[1]
+
+def p_unary_5(p):
+    """
+    unary_func : LANG
+    """
+    p[0] = p[1]
+
+def p_unary_6(p):
+    """
+    unary_func : DATATYPE
+    """
+    p[0] = p[1]
+
+def p_unary_7(p):
+    """
+    unary_func : STR
+    """
+    p[0] = p[1]
+
+def p_unary_8(p):
+    """
+    unary_func : UPPERCASE
+    """
+    p[0] = p[1]
+
+def p_unary_9(p):
+    """
+    unary_func : DOUBLE 
+               | INTEGER 
+               | DECIMAL 
+               | FLOAT 
+               | STRING 
+               | BOOLEAN 
+               | DATETIME 
+               | NONPOSINT 
+               | NEGATIVEINT 
+               | LONG 
+               | INT 
+               | SHORT 
+               | BYTE 
+               | NONNEGINT 
+               | UNSIGNEDLONG 
+               | UNSIGNEDINT 
+               | UNSIGNEDSHORT 
+               | UNSIGNEDBYTE 
+               | POSITIVEINT
+    """
+    p[0] = p[1]
 
 def p_var_list(p):
     """
@@ -254,96 +690,24 @@ def p_single_var_list(p):
     var_list : VARIABLE
     """
     p[0] = [Argument(p[1], False)]
-    
-#def p_triple_list(p):
-#    """
-#    triple_list : triple_list POINT triple
-#    """
-#    p[0] = p[1] + [p[3]]
-
-#def p_single_triple_list(p):
-#    """
-#    triple_list : triple
-#    """
-#    p[0] = [p[1]]
-
 def p_triple_0(p):
     """
     triple : subject predicate object
     """
     p[0] = Triple(p[1], p[2], p[3])
 
-def p_expression_0(p):
-    """
-    expression : expression EQUALS expression
-    """
-    p[0] = Expression(p[2], p[1], p[3])
-
-def p_expression_1(p):
-    """
-    expression : CONSTANT
-    """
-    p[0] = Argument(p[1], True)
-
-def p_expression_2(p):
-    """
-    expression : VARIABLE
-    """
-    p[0] = Argument(p[1], False)
-
-def p_expression_3(p):
-    """
-    expression : expression LESS expression
-    """
-    p[0] = Expression(p[2], p[1], p[3])
-
-def p_expression_4(p):
-    """
-    expression : expression LESSEQ expression
-    """
-    p[0] = Expression(p[2], p[1], p[3])
-
-def p_expression_5(p):
-    """
-    expression : expression GREATER expression
-    """
-    p[0] = Expression(p[2], p[1], p[3])
-
-def p_expression_6(p):
-    """
-    expression : expression GREATEREQ expression
-    """
-    p[0] = Expression(p[2], p[1], p[3])
-
-def p_expression_7(p):
-    """
-    expression : expression NEQUALS expression
-    """
-    p[0] = Expression(p[2], p[1], p[3])
-
-#def p_expression_3(p):
-#    """
-#    expression : expression RAB expression
-#    """
-#    p[0] = Expression(p[2], p[1], p[3])
-
-#def p_expression_4(p):
-#    """
-#    expression : expression LAB expression
-#    """
-#    p[0] = Expression(p[2], p[1], p[3])
-
 def p_predicate_uri(p):
     """
-   predicate : uri
+    predicate : uri
     """
     p[0] = Argument(p[1], True)
 
 def p_predicate_var(p):
     """
-   predicate : VARIABLE
+    predicate : VARIABLE
     """
     p[0] = Argument(p[1], False)
+
 
 def p_subject_uri(p):
     """
@@ -384,4 +748,5 @@ parser = yacc.yacc(debug=0)
 
 def parse(string):
 
-    return parser.parse(string, lexer=lexer)
+    return parser.parse(string, lexer=lexer) 
+

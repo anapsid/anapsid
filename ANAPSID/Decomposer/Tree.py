@@ -73,12 +73,13 @@ class Tree(object):
 
 class Node(Tree):
 
-    def __init__(self, l, r):
+    def __init__(self, l, r, filters=[]):
         self.left = l
         self.right = r
         self.vars = unify(l.vars, r.vars, l.dict)
         self.dict = l.dict = r.dict
         self.size = l.size + r.size
+        self.filters = filters
 
     def instantiate(self, d):
         return Node(self.left.instantiate(d), self.right.instantiate(d))
@@ -158,11 +159,12 @@ def getDegree(vars0, dict0):
     return s
 
 class Leaf(Tree):
-    def __init__(self, s, vs, dc):
+    def __init__(self, s, vs, dc, filters=[]):
         self.vars = vs
         self.dict = dc
         self.size = 1
         self.service = s
+        self.filters = filters
 
     def __hash__(self):
         return hash((self.vars, self.dict, self.size, self.degree(), 
@@ -192,7 +194,7 @@ class Leaf(Tree):
                 del newdict[c]
         return Leaf(self.service.instantiateFilter(d, filter_str), newvars, newdict)
 
-
+    
     def aux(self, n):
         return self.service.show(n)
 
@@ -323,16 +325,20 @@ def sortedInclude(l, e):
             return
     l.insert(len(l), e)
 
-def makeNode(l, r):
-
+def updateFilters(node,filters):
+    if isinstance(node,Leaf):
+      return  Leaf(node.service,node.vars,node.dict,node.filters+filters)
+    elif isinstance(node,Node):
+      return Node(node.left,node.right,node.filters+filters)  
+      
+def makeNode(l, r,filters=[]):
     if l.constantPercentage() > r.constantPercentage():
-        n = Node(l, r)
+        n = Node(l, r, filters)
     else:
-        n = Node(r, l)
+        n = Node(r, l, filters)
     return n
 
-def makeBushyTree(ss):
-
+def makeBushyTree(ss,filters=[]):
     (d, pq) = createLeafs(ss)
     heapq.heapify(pq)
     others = []
@@ -347,7 +353,7 @@ def makeBushyTree(ss):
 
             if shareAtLeastOneVar(l,r):
                 pq.remove(r)
-                n = makeNode(l, r)
+                n = makeNode(l, r,filters)
                 heapq.heappush(pq, n)
                 done = True
                 break
@@ -355,27 +361,27 @@ def makeBushyTree(ss):
             others.append(l)
 
     if len(pq) == 1:
-        for e in others:
-            pq[0] = makeNode(pq[0], e)
-        return pq[0]
+          for e in others:
+            pq[0] = makeNode(pq[0], e,filters)
+          return pq[0]
     elif others:
         while len(others) > 1:
             l = others.pop(0)
             r = others.pop(0)
 
-            n = Node(l, r)
+            n = Node(l, r,filters)
             others.append(n)
         if others:
             return others[0]
         return None
 
-def makeNaiveTree(ss):
+def makeNaiveTree(ss,filters=[]):
     (_, pq) = createLeafs(ss)
     while len(pq) > 1:
         l = pq.pop(0)
         r = pq.pop(0)
 
-        n = makeNode(l, r)
+        n = makeNode(l, r,filters)
         pq.append(n)
 
     if len(pq) == 1:
@@ -383,14 +389,14 @@ def makeNaiveTree(ss):
     else:
         return None
 
-def makeLLTree(ss):
+def makeLLTree(ss,filters=[]):
 
     (_, pq) = createLeafs(ss)
     while len(pq) > 1:
         l = pq.pop(0)
         r = pq.pop(0)
 
-        n = makeNode(l, r)
+        n = makeNode(l, r,filters)
         pq.insert(0, n)
 
     if len(pq) == 1:

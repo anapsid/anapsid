@@ -28,6 +28,7 @@ def decomposeQuery (l, q, d, c):
     genPred = readGeneralPredicates(os.path.join(os.path.split(os.path.split(__file__)[0])[0],
                                                                'Catalog','generalPredicates'))
     prefixes = getPrefs(q.prefs)
+    #print "ln" + str(q.body) + str(type(q.body))
     return decomposeUnionBlock(q.body, l, genPred, prefixes, d, c)
 
 def decomposeUnionBlock(ub, l, genPred, prefixes, decomposition, c):
@@ -48,9 +49,9 @@ def decomposeJoinBlock(jb, l, genPred, prefixes, decomposition, c):
     tl = []
     sl = []
     fl = []
-
+    #print "len jb.triples" + str(len(jb.triples))
+    
     for bgp in jb.triples:
-        #print bgp
         if isinstance(bgp, Triple):
             tl.append(bgp)
         elif isinstance(bgp, Filter):
@@ -61,8 +62,8 @@ def decomposeJoinBlock(jb, l, genPred, prefixes, decomposition, c):
             pub = decomposeUnionBlock(bgp, l, genPred, prefixes, decomposition, c)
             if pub:
                 sl.append(pub)
-    #print 'tl'
-    #print tl
+    #print 'fl'
+    #print fl 
     if tl:
         gs = getGroups(l, tl, genPred, prefixes, decomposition, c)
         #print 'gs'
@@ -72,14 +73,19 @@ def decomposeJoinBlock(jb, l, genPred, prefixes, decomposition, c):
             sl = gs
         else:
             return None
-
-    includeFilter(sl, fl)
-    #print 'sl'
-    #print sl
+    fl1=includeFilter(sl, fl)
+    fl=list(set(fl) - set(fl1))
+    #print "sl" + str(sl)
+    #print "fl" + str(fl)
     if sl:
-        return JoinBlock(sl)
+      if (len(sl)==1 and isinstance(sl[0],UnionBlock) and fl!=[]):
+        sl[0]=updateFilters(sl[0],fl) 
+      return JoinBlock(sl,fl)
     else:
         return None
+
+def updateFilters(node,filters):
+   return UnionBlock(node.triples,filters)
 
 def getGroups(l, tl, genPred, prefixes, decomposition, c):
 
@@ -111,14 +117,16 @@ def getGroups(l, tl, genPred, prefixes, decomposition, c):
     return []
 
 def includeFilter(jb_triples, fl):
-
+    fl1=[]
     for jb in jb_triples:
       if isinstance(jb, list):
         for f in fl:
-            includeFilterAux(f, jb)
+            fl2=includeFilterAux(f, jb)
+            fl1=fl1+fl2
+    return fl1
 
 def includeFilterAux(f, sl):
-
+    fl1=[]
     for s in sl:
       vars_s = set()
       for t in s.triples:
@@ -126,16 +134,18 @@ def includeFilterAux(f, sl):
       vars_f = f.getVars()
       if set(vars_s) & set(vars_f) == set(vars_f):
          s.include_filter(f)
-
+         fl1=fl1 + [f]
+    return fl1
 def makePlanQuery(q, plan):
     x = makePlanUnionBlock(q.body, plan)
     return x
 
 def makePlanUnionBlock(ub, plan):
     r = []
+    #print "makePlanUnionBlock " + " ".join(map(str,ub.triples))
     for jb in ub.triples:
         r.append(makePlanJoinBlock(jb, plan))
-    return UnionBlock(r)
+    return UnionBlock(r,ub.filters)
 
 def makePlanJoinBlock(jb, plan):
     sl = []
@@ -149,11 +159,11 @@ def makePlanJoinBlock(jb, plan):
             sl.append(makePlanUnionBlock(bgp, plan))
         elif isinstance(bgp, Service):
             sl.append(bgp)
-    pl = makePlanAux(sl, plan)
+    pl = makePlanAux(sl, plan,jb.filters)
     if ol:
        pl = [pl]
        pl.extend(ol)
-    return JoinBlock(pl)
+    return JoinBlock(pl,jb.filters)
 
 ###############################################################################
 # Making Unitary Star (used in previous version)
@@ -432,8 +442,8 @@ def assignEndpointS(tl, l, genPred, prefixes, c):
             ps.extend(ps3)
         p = selectCurrentBest(ps, sg, qcl, prefixes, genPred, c)
         if len(p) == 0:
-            print "no hay opciones para "+str(sg.predicate)
-            print "tripletas "+str(tl)
+            print "there are no options for " + tr(sg.predicate)
+            print "triples "+str(tl)
             print "ps: "+str(ps)
             print "qcl: "+str(qcl)
             print "c: "+str(c)
@@ -500,15 +510,12 @@ def selectCurrentBest(options, triple, qcl, ps, genPred, c):
            nl = list(qcl[ep])
            if shareWithAny(triple, nl):
                nl.append(triple)
-	       #print "probando con "+str(nl)
                if test(ep, nl, ps, c):
-	           #print "yes"
                    currentOptions.append(ep)
                    added = True
     if not added or not (getUri(triple.predicate, ps) in genPred or not triple.predicate.constant):
       for ep in options:
        nl = [triple]
-       #print "ahora con "+str(nl)
        #Avoid ask's of non-instantiated triple patterns
        if not(triple.subject.constant or triple.predicate.constant or triple.theobject.constant) and not ep in currentOptions:
        #    print triple.subject.name, triple.predicate.name, triple.theobject.name
@@ -805,9 +812,9 @@ def decompose(qString, eFile, decomposition, contact):
     # print query
     return query
 
-def makeBushyTree(ls):
+def makeBushyTree(ls,filters=[]):
 
-    return Tree.makeBushyTree(ls)
+    return Tree.makeBushyTree(ls,filters)
 
 def makeNaiveTree(ls):
 
@@ -830,10 +837,9 @@ def makePlan2(qString, plan):
     q.body = makePlanQuery(q, plan)
     return q
 
-def makePlanAux(ls, plan):
-
+def makePlanAux(ls, plan,filters=[]):
     if plan == "b":
-        return makeBushyTree(ls)
+        return makeBushyTree(ls,filters)
     elif plan == "naive":
         return makeNaiveTree(ls)
     elif plan == "ll":
