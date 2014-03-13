@@ -102,6 +102,7 @@ class Xgjoin(Join):
 
             if (len(self.left_table) + len(self.right_table) >= self.memorySize):
                 self.flushRJT()
+                print "Flushed RJT!"
 
         # Turn off alarm to stage 2.
         signal.alarm(0)
@@ -110,7 +111,7 @@ class Xgjoin(Join):
 
 
     def stage1(self, tuple, tuple_rjttable, other_rjttable):
-        # Stage 1: While one of the sources is sending data.
+        #print " Stage 1: While one of the sources is sending data."
         if (tuple != "EOF"):
             # Get the resource associated to the tuples.
             resource = ''
@@ -135,7 +136,7 @@ class Xgjoin(Join):
                 #other_rjttable[resource] = [record]
 
     def stage2(self, signum, frame):
-        # Stage 2: When both sources become blocked.
+        #print " Stage 2: When both sources become blocked."
         self.sourcesBlocked = True
 
         # Get common resources.
@@ -187,7 +188,7 @@ class Xgjoin(Join):
 #        print "----------------END Second Stage!"
 
     def stage3(self):
-        # Stage 3: When both sources sent all the data.
+        #print "Stage 3: When both sources sent all the data."
 
         # RJTs in main (left) memory are probed against RJTs in secondary (right) memory.
         common_resources = set(self.left_table.keys()) & set(self.fileDescriptor_right.keys())
