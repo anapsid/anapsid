@@ -783,6 +783,12 @@ def p_unary_9(p):
     """
     p[0] = p[1]
 
+def p_unary_10(p):
+    """
+    unary_func : ID COLON ID
+    """
+    p[0] = p[1]+p[2]+p[3]
+
 def p_predicate_uri(p):
     """
     predicate : uri

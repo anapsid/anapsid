@@ -209,24 +209,23 @@ class Leaf(Tree):
 
     def getInfoIO(self, query):
         subquery = self.service.getTriples()
+        vars_order_by=[x for v in query.order_by for x in v.getVars() ]
         vs = list(set(self.service.getVars()))# - set(self.service.filters_vars)) # Modified this by mac: 31-01-2014
-        #print "servuce", vs, self.service.filters_vars
+        #print "service", vs, self.service.filters_vars
         predictVar=set(self.service.getPredVars())
         variables = [string.lstrip(string.lstrip(v, "?"), "$") for v in vs]
         if query.args == []:
             projvars = vs
         else:
             projvars = list(set([v.name for v in query.args if not v.constant]))
-        subvars = list((query.join_vars | set(projvars)) & set(vs))
-        
+        subvars = list((query.join_vars | set(projvars)) & set(vs) )
         if subvars == []:
           subvars=vs
-        subvars = list(set(subvars) | predictVar)
-        
+        subvars = list(set(subvars) | predictVar | set(vars_order_by))
         # This corresponds to the case when the subquery is the same as the original query.
         # In this case, we project the variables of the original query.
         if query.body.show(" ").count("SERVICE") == 1:
-          subvars = projvars
+          subvars = list(set(projvars) | set(vars_order_by)) 
         
         subvars = string.joinfields(subvars, " ")
         #MEV distinct pushed down to the sources
@@ -234,6 +233,7 @@ class Leaf(Tree):
             d = "DISTINCT "
         else:
             d = ""
+        
         subquery = "SELECT "+d+ subvars + " WHERE {" + subquery + "\n" + query.filter_nested + "\n}"
         return (self.service.endpoint, query.getPrefixes()+subquery, set(variables))
 

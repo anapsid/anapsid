@@ -468,7 +468,11 @@ def createPlan(query, adaptive, wc, buffersize, c, endpointType):
 
     operatorTree = includePhysicalOperatorsQuery(query, adaptive, wc,
                                                  buffersize, c)
-    
+   
+    # Adds the order by operator to the plan. 
+    if (len(query.order_by) > 0):
+        operatorTree = TreePlan(Xorderby(query.order_by), operatorTree.vars, operatorTree)
+
     # Adds the project operator to the plan.
     if (query.args != []):
         operatorTree = TreePlan(Xproject(query.args), operatorTree.vars, operatorTree)
@@ -487,8 +491,8 @@ def createPlan(query, adaptive, wc, buffersize, c, endpointType):
         operatorTree = TreePlan(Xlimit(None, query.limit), operatorTree.vars, operatorTree)
 
     # Adds the order by operator to the plan. 
-    if (len(query.order_by) > 0):
-        operatorTree = TreePlan(Xorderby(query.order_by), operatorTree.vars, operatorTree)
+    #if (len(query.order_by) > 0):
+    #    operatorTree = TreePlan(Xorderby(query.order_by), operatorTree.vars, operatorTree)
 
     #print "operator type:", operatorTree
     return operatorTree

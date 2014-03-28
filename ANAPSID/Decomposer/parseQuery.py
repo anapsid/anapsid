@@ -601,6 +601,13 @@ def p_binary_2(p):
     """
     p[0] = p[1]
 
+def p_binary_3(p):
+    """
+    binary_func : CONSTANT
+    """
+    p[0] = p[1]
+
+
 def p_unary_0(p):
     """
     unary_func : BOUND
@@ -678,6 +685,12 @@ def p_unary_9(p):
                | POSITIVEINT
     """
     p[0] = p[1]
+
+def p_unary_10(p):
+    """
+    unary_func : ID COLON ID
+    """
+    p[0] = p[1]+p[2]+p[3]
 
 def p_var_list(p):
     """

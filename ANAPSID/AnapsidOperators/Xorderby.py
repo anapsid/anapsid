@@ -7,6 +7,30 @@ The intermediate results are represented in a queue.
 @author: Maribel Acosta Deibe
 '''
 from multiprocessing import Queue
+import datetime
+
+data_types = {
+        'integer' : (int, 'numerical'),
+        'decimal' : (float, 'numerical'),
+        'float'   : (float, 'numerical'),
+        'double'  : (float, 'numerical'),
+        'string'  : (str, str),
+        'boolean' : (bool, bool),
+        'dateTime' : (datetime, datetime),
+        'nonPositiveInteger' : (int, 'numerical'),
+        'negativeInteger' : (int, 'numerical'),
+        'long'    : (long, 'numerical'),
+        'int'     : (int, 'numerical'),
+        'short'   : (int, 'numerical'),
+        'byte'    : (bytes, bytes),
+        'nonNegativeInteger' : (int, 'numerical'),
+        'unsignedLong' : (long, 'numerical'),
+        'unsignedInt'  : (int, 'numerical'),
+        'unsignedShort' : (int, 'numerical'),
+        'unsignedByte' : (bytes, bytes), # TODO: this is not correct
+        'positiveInteger' : (int, 'numerical')
+        }
+
 
 class Xorderby(object):
     
@@ -31,6 +55,7 @@ class Xorderby(object):
             results_copy.append(tuple)
             res = {}
             res.update(tuple)
+            #print "tuple", tuple
             for arg in self.args:
                 res.update({arg.name[1:]: self.extractValue(tuple[arg.name[1:]])})
             res.update({'__id__' : tuple_id})

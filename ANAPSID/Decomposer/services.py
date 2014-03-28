@@ -651,6 +651,41 @@ class Optional(object):
     def constantPercentage(self):
         return self.constantNumber()/self.places()
 
+unaryFunctor = {
+     '!',
+    'BOUND',
+    'ISIRI',
+    'ISURI',
+    'ISBLANK',
+    'ISLITERAL',
+    'STR',
+    'LANG',
+    'DATATYPE',
+    'xsd:double',
+    'xsd:integer',
+    'xsd:decimal',
+    'xsd:float',
+    'xsd:string',
+    'xsd:boolean',
+    'xsd:dateTime',
+    'xsd:nonPositiveInteger',
+    'xsd:negativeInteger',
+    'xsd:long',
+    'xsd:int',
+    'xsd:short',
+    'xsd:byte',
+    'xsd:nonNegativeInteger',
+    'xsd:unsignedInt',
+    'xsd:unsignedShort',
+    'xsd:unsignedByte',
+    'xsd:positiveInteger' 
+    }
+binaryFunctor = {
+    'REGEX',
+    'SAMETERM',
+    'LANGMATCHES'
+    }
+   
 class Expression(object):
 
     def __init__(self, op, left, right):
@@ -659,9 +694,11 @@ class Expression(object):
         self.right = right
 
     def __repr__(self):
-        if (self.op == '!' or self.op == 'BOUND' or self.op == 'ISIRI' or self.op == 'ISURI' or self.op == 'ISBLANK' or self.op == 'ISLITERAL' or self.op == 'STR' or self.op == 'LANG' or self.op == 'DATATYPE'):
+      #  if (self.op == '!' or self.op == 'xsd:integer' or self.op == 'BOUND' or self.op == 'ISIRI' or self.op == 'ISURI' or self.op == 'ISBLANK' or self.op == 'ISLITERAL' or self.op == 'STR' or self.op == 'LANG' or self.op == 'DATATYPE'):
+        if (self.op in unaryFunctor): 
           return (self.op +"("+ str(self.left) + ")")
-        elif (self.op == 'REGEX' or self.op == 'SAMETERM' or self.op == 'LANGMATCHES'):
+        #elif (self.op == 'REGEX' or self.op == 'SAMETERM' or self.op == 'LANGMATCHES'):
+        elif (self.op in binaryFunctor):
             if (self.op == 'REGEX' and self.right.desc!=False):
               return (self.op + "("+ str(self.left) + "," + self.right.name + "," + self.right.desc + ")")
             else:
@@ -670,7 +707,8 @@ class Expression(object):
           return (str(self.left)+" "+ self.op +" "+str(self.right))
 
     def getVars(self):
-        if (self.op=='REGEX' or self.op=='!' or self.op == 'BOUND' or self.op == 'ISIRI' or self.op == 'ISURI' or self.op == 'ISBLANK' or self.op == 'ISLITERAL' or self.op == 'STR' or self.op == 'LANG' or self.op == 'DATATYPE'):
+        #if (self.op=='REGEX' or self.op == 'xsd:integer' or self.op=='!' or self.op == 'BOUND' or self.op == 'ISIRI' or self.op == 'ISURI' or self.op == 'ISBLANK' or self.op == 'ISLITERAL' or self.op == 'STR' or self.op == 'LANG' or self.op == 'DATATYPE'):
+        if ((self.op in unaryFunctor) or (self.op in binaryFunctor)):
           return self.left.getVars()
         else:
           return self.left.getVars()+self.right.getVars()
