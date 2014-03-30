@@ -570,6 +570,14 @@ def p_express_arg_3(p):
     """
     p[0] = Argument(p[1], True)
 
+def p_express_arg_03(p):
+    """
+    express_arg : NUMBER POINT NUMBER
+    """
+    numberDecimal = str(p[1]) + p[2] + str(p[3])
+    p[0] = Argument(numberDecimal, True)
+
+
 def p_express_arg_4(p):
     """
     express_arg : REGEX LPAR express_arg COMA pattern_arg regex_flag
@@ -608,11 +616,17 @@ def p_express_arg_6(p):
 
 def p_express_arg_7(p):
     """
+    express_arg : UNARYOP express_arg 
+    """
+    p[0] = Expression(p[1], p[2],None) 
+
+def p_express_arg_8(p):
+    """
     express_arg : express_arg ARITOP express_arg
     """
     p[0] = Expression(p[2], p[1], p[3])
  
-def p_express_arg_8(p):
+def p_express_arg_9(p):
     """
     express_arg : LPAR express_arg RPAR
     """
@@ -623,6 +637,7 @@ def p_arit_op_0(p):
     ARITOP : PLUS
     """
     p[0] = p[1]
+
 def p_arit_op_1(p):
     """
     ARITOP : MINUS
@@ -638,6 +653,18 @@ def p_arit_op_2(p):
 def p_arit_op_3(p):
     """
     ARITOP : DIV
+    """
+    p[0] = p[1]
+
+def p_unaryarit_op_1(p):
+    """
+    UNARYOP : PLUS 
+    """
+    p[0] = p[1]
+
+def p_unaryarit_op_2(p):
+    """
+    UNARYOP : MINUS
     """
     p[0] = p[1]
 
