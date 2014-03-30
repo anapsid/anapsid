@@ -684,8 +684,9 @@ binaryFunctor = {
     'REGEX',
     'SAMETERM',
     'LANGMATCHES'
-    }
-   
+    }  
+
+      
 class Expression(object):
 
     def __init__(self, op, left, right):
@@ -694,21 +695,21 @@ class Expression(object):
         self.right = right
 
     def __repr__(self):
-      #  if (self.op == '!' or self.op == 'xsd:integer' or self.op == 'BOUND' or self.op == 'ISIRI' or self.op == 'ISURI' or self.op == 'ISBLANK' or self.op == 'ISLITERAL' or self.op == 'STR' or self.op == 'LANG' or self.op == 'DATATYPE'):
         if (self.op in unaryFunctor): 
-          return (self.op +"("+ str(self.left) + ")")
-        #elif (self.op == 'REGEX' or self.op == 'SAMETERM' or self.op == 'LANGMATCHES'):
+            return (self.op +"("+ str(self.left) + ")")
         elif (self.op in binaryFunctor):
             if (self.op == 'REGEX' and self.right.desc!=False):
               return (self.op + "("+ str(self.left) + "," + self.right.name + "," + self.right.desc + ")")
             else:
               return (self.op + "("+ str(self.left) + "," + str(self.right) + ")")
+        elif (self.right is None):
+            return (self.op + str(self.left))
         else:
-          return (str(self.left)+" "+ self.op +" "+str(self.right))
+            return (str(self.left)+" "+ self.op +" "+str(self.right))
 
     def getVars(self):
         #if (self.op=='REGEX' or self.op == 'xsd:integer' or self.op=='!' or self.op == 'BOUND' or self.op == 'ISIRI' or self.op == 'ISURI' or self.op == 'ISBLANK' or self.op == 'ISLITERAL' or self.op == 'STR' or self.op == 'LANG' or self.op == 'DATATYPE'):
-        if ((self.op in unaryFunctor) or (self.op in binaryFunctor)):
+        if ((self.op in unaryFunctor) or (self.op in binaryFunctor) or (self.right is  None)):
           return self.left.getVars()
         else:
           return self.left.getVars()+self.right.getVars()
