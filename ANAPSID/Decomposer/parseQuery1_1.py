@@ -662,6 +662,12 @@ def p_express_arg_9(p):
     """
     p[0] = p[2]
 
+def p_express_arg_10(p):
+    """
+    express_arg : express_arg RELOP express_arg
+    """
+    p[0] = Expression(p[2], p[1], p[3])
+
 def p_arit_op_0(p):
     """
     ARITOP : PLUS
