@@ -73,6 +73,7 @@ def decomposeJoinBlock(jb, l, genPred, prefixes, decomposition, c):
             sl = gs
         else:
             return None
+
     fl1=includeFilter(sl, fl)
     fl=list(set(fl) - set(fl1))
     #print "sl" + str(sl)
@@ -123,7 +124,23 @@ def includeFilter(jb_triples, fl):
         for f in fl:
             fl2=includeFilterAux(f, jb)
             fl1=fl1+fl2
+      elif (isinstance(jb,UnionBlock)):
+        for f in fl:
+            fl2=includeFilterUnionBlock(jb,f)
+            fl1=fl1+fl2
     return fl1
+
+def includeFilterUnionBlock(jb,f):
+    fl1=[]
+    for jbJ in jb.triples:
+      for jbUS in jbJ.triples:
+        if isinstance(jbUS,Service):
+           vars_s = set(jbUS.getVars())
+           vars_f = f.getVars()
+           if set(vars_s) & set(vars_f) == set(vars_f):
+              jbUS.include_filter(f)
+              fl1=fl1 + [f]
+    return fl1 
 
 def includeFilterAux(f, sl):
     fl1=[]
@@ -798,7 +815,6 @@ def decompose(qString, eFile, decomposition, contact):
     with open(eFile) as efile:
         endpointList = parseEndpoints.parse(efile)
     query = parseQuery.parse(qString)
-
     groups = decomposeQuery (endpointList, query, decomposition, contact)
     if groups == None:
         return None

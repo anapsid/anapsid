@@ -320,6 +320,7 @@ def p_union_block_service_0(p):
     union_block_service : join_block_service rest_union_block_service
     """
     p[0] = [JoinBlock(p[1])] + p[2]
+
 def p_rest_union_block_service_0(p):
     """
     rest_union_block_service : empty
@@ -328,11 +329,24 @@ def p_rest_union_block_service_0(p):
 
 def p_rest_union_block_service_1(p):
     """
-    rest_union_block_service : UNION join_block_service rest_union_block_service
+    rest_union_block_service : UNION LKEY join_block_service rest_union_block_service RKEY
     """
-    p[0] = [JoinBlock(p[2])] + p[3] 
+    p[0] = [JoinBlock(p[3])] + p[4] 
 
 def p_join_block_service_0(p):
+    """
+    join_block_service : LKEY bgp_service rest_join_block_service RKEY rest_join_block_service
+    """
+    jb_list = [p[2]]+ p[3]
+    if (p[5]!=[] and isinstance(p[5][0],Filter)):
+      p[0] = [UnionBlock([JoinBlock(jb_list)])] + p[5]
+    elif isinstance(p[2],UnionBlock):
+      p[0] =  [p[2]]+ p[3] + p[5]
+    else:
+      p[0] = [UnionBlock([JoinBlock(jb_list)])] + p[5]
+
+
+def p_join_block_service_1(p):
     """
     join_block_service : bgp_service rest_join_block_service 
     """
@@ -356,11 +370,19 @@ def p_rest_join_block_service_2(p):
     """
     p[0] = [p[1]] + p[2]
 
-def p_bgp__service_0(p):
+def p_bgp_service_01(p):
     """
-    bgp_service : LKEY group_graph_pattern_service RKEY
+    bgp_service :  LKEY join_block_service UNION join_block_service rest_union_block_service RKEY
     """
-    p[0] = p[2]
+    ggp = [JoinBlock(p[2])] + [JoinBlock(p[4])] + p[5]
+    p[0] = UnionBlock(ggp)
+
+def p_bgp_service_02(p):
+    """
+    bgp_service :  join_block_service UNION join_block_service rest_union_block_service 
+    """
+    ggp = [JoinBlock(p[1])] + [JoinBlock(p[3])] + p[4]
+    p[0] = UnionBlock(ggp)
 
 def p_bgp_service_1(p):
     """
@@ -385,6 +407,14 @@ def p_bgp_service_4(p):
     bgp_service : OPTIONAL LKEY group_graph_pattern_service RKEY
     """
     p[0] = Optional(p[3])
+
+def p_bgp_service_5(p):
+    """
+    bgp_service : LKEY join_block_service rest_union_block_service RKEY
+    """
+    bgp_arg = p[2] + p[3]
+    p[0] = UnionBlock(JoinBlock(bgp_arg))
+
 
 def p_var_list(p):
     """
