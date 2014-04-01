@@ -655,13 +655,21 @@ class Optional(object):
 unaryFunctor = {
      '!',
     'BOUND',
+    'bound',
     'ISIRI',
+    'isiri',
     'ISURI',
+    'isuri',
     'ISBLANK',
+    'isblank',
     'ISLITERAL',
+    'isliteral',
     'STR',
+    'str',
     'LANG',
+    'lang',
     'DATATYPE',
+    'datatype',
     'xsd:double',
     'xsd:integer',
     'xsd:decimal',
@@ -684,7 +692,10 @@ unaryFunctor = {
 binaryFunctor = {
     'REGEX',
     'SAMETERM',
-    'LANGMATCHES'
+    'LANGMATCHES',
+    'langMatches',
+    'regex',
+    'sameTerm'
     }  
 
       
@@ -706,7 +717,7 @@ class Expression(object):
         elif (self.right is None):
             return (self.op + str(self.left))
         else:
-            return (str(self.left)+" "+ self.op +" "+str(self.right))
+            return ("(" + str(self.left)+" "+ self.op +" "+str(self.right)+ ")")
 
     def getVars(self):
         #if (self.op=='REGEX' or self.op == 'xsd:integer' or self.op=='!' or self.op == 'BOUND' or self.op == 'ISIRI' or self.op == 'ISURI' or self.op == 'ISBLANK' or self.op == 'ISLITERAL' or self.op == 'STR' or self.op == 'LANG' or self.op == 'DATATYPE'):
