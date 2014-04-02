@@ -852,6 +852,12 @@ def p_unary_10(p):
     """
     p[0] = p[1]+p[2]+p[3]
 
+def p_unary_11(p):
+    """
+    unary_func : uri
+    """
+    p[0] = p[1]
+
 def p_predicate_uri(p):
     """
     predicate : uri

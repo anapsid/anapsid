@@ -687,7 +687,25 @@ unaryFunctor = {
     'xsd:unsignedInt',
     'xsd:unsignedShort',
     'xsd:unsignedByte',
-    'xsd:positiveInteger' 
+    'xsd:positiveInteger',
+    '<http://www.w3.org/2001/XMLSchema#integer>',
+    '<http://www.w3.org/2001/XMLSchema#decimal>',
+    '<http://www.w3.org/2001/XMLSchema#double>',
+    '<http://www.w3.org/2001/XMLSchema#float>',
+    '<http://www.w3.org/2001/XMLSchema#string>',
+    '<http://www.w3.org/2001/XMLSchema#boolean>',
+    '<http://www.w3.org/2001/XMLSchema#dateTime>',
+    '<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>',
+    '<http://www.w3.org/2001/XMLSchema#negativeInteger>',
+    '<http://www.w3.org/2001/XMLSchema#long>',
+    '<http://www.w3.org/2001/XMLSchema#int>',
+    '<http://www.w3.org/2001/XMLSchema#short>',
+    '<http://www.w3.org/2001/XMLSchema#byte>',
+    '<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>',
+    '<http://www.w3.org/2001/XMLSchema#unsignedInt>',
+    '<http://www.w3.org/2001/XMLSchema#unsignedShort>',
+    '<http://www.w3.org/2001/XMLSchema#unsignedByte>',
+    '<http://www.w3.org/2001/XMLSchema#positiveInteger>'
     }
 binaryFunctor = {
     'REGEX',
