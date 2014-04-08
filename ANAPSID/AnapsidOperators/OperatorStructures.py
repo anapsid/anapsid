@@ -14,7 +14,7 @@ class Record(object):
     It is composed by a tuple, probeTS (timestamp when the tuple was probed)
     and insertTS (timestamp when the tuple was inserted in the table).
     '''
-    def __init__(self, tuple, probeTS, insertTS, flushTS):
+    def __init__(self, tuple, probeTS, insertTS=None, flushTS=None):
         self.tuple    = tuple
         self.probeTS  = probeTS
         self.insertTS = insertTS
