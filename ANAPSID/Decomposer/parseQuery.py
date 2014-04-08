@@ -310,9 +310,9 @@ def p_rest_union_block_0(p):
 
 def p_rest_union_block_1(p):
     """
-    rest_union_block : UNION LKEY join_block rest_union_block RKEY
+    rest_union_block : UNION LKEY join_block rest_union_block RKEY rest_union_block
     """
-    p[0] = [JoinBlock(p[3])] + p[4]
+    p[0] = [JoinBlock(p[3])] + p[4] + p[6]
 
 def p_join_block_0(p):
     """

@@ -329,9 +329,9 @@ def p_rest_union_block_service_0(p):
 
 def p_rest_union_block_service_1(p):
     """
-    rest_union_block_service : UNION LKEY join_block_service rest_union_block_service RKEY
+    rest_union_block_service : UNION LKEY join_block_service rest_union_block_service RKEY rest_union_block_service
     """
-    p[0] = [JoinBlock(p[3])] + p[4] 
+    p[0] = [JoinBlock(p[3])] + p[4] + p[6]
 
 def p_join_block_service_0(p):
     """
