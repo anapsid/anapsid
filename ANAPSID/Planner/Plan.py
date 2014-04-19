@@ -509,9 +509,8 @@ def includePhysicalOperatorsUnionBlock(query, ub, a, wc, buffersize, c):
     while len(r) > 1:
         left = r.pop(0)
         right = r.pop(0)
-
         all_variables  = left.vars | right.vars
-
+       
         if a:
             n =  TreePlan(Xunion(left.vars, right.vars),
                           all_variables, left, right)
@@ -654,8 +653,14 @@ def includePhysicalOperatorJoin(a, wc, l, r):
             dependent_join = True
             #print "Planner CASE 2: nested loop swapping plan", type(r)
         elif not(lowSelectivityLeft) and lowSelectivityRight  and (not(isinstance(l, TreePlan)) or not(l.operator.__class__.__name__ == "NestedHashJoinFilter" )) and (not(isinstance(r,TreePlan)) or not(r.operator.__class__.__name__ == "Xgjoin" or r.operator.__class__.__name__ == "NestedHashJoinFilter")):
-            n = TreePlan(NestedHashJoin(join_variables), all_variables, l, r)
-            dependent_join = True
+            if (isinstance(r,TreePlan) and (set(l.vars) & set(r.operator.vars_left) !=set([])) and (set(l.vars) & set(r.operator.vars_right) !=set([]))):
+               n = TreePlan(NestedHashJoin(join_variables), all_variables, l, r)
+               dependent_join = True
+            elif (isinstance(l,TreePlan) and (set(r.vars)& set(l.operator.vars_left) !=set([])) and   (set(r.vars)& set(l.operator.vars_right) !=set([]))):
+               n = TreePlan(NestedHashJoin(join_variables), all_variables, l, r)
+               dependent_join = True
+            else:
+               n =  TreePlan(Xgjoin(join_variables), all_variables, l, r)
             #print "Planner case 2.5", type(r)
         # Case 3: both operators are low selective
 
@@ -721,8 +726,11 @@ def includePhysicalOperators(query, tree, a, wc, buffersize, c):
         elif isinstance(tree.service, UnionBlock):
             return includePhysicalOperatorsUnionBlock(query, tree.service,
                                                       a, wc, buffersize, c)
+        elif isinstance(tree.service, JoinBlock):
+            return includePhysicalOperatorsJoinBlock(query, tree.service,a, wc, buffersize, c)
         else:
-            print "Plan.py:258"
+            print "tree.service" + str(type(tree.service)) + str(tree.service)
+            print "Error Type not considered"
 
     elif isinstance(tree, Node):
 
