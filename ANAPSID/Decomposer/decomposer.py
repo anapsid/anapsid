@@ -62,6 +62,10 @@ def decomposeJoinBlock(jb, l, genPred, prefixes, decomposition, c):
             pub = decomposeUnionBlock(bgp, l, genPred, prefixes, decomposition, c)
             if pub:
                 sl.append(pub)
+        elif isinstance(bgp, JoinBlock):
+            pub = decomposeJoinBlock(bgp, l, genPred, prefixes, decomposition, c)
+            if pub:
+                sl.append(pub)
     #print 'fl'
     #print fl 
     if tl:
@@ -112,7 +116,8 @@ def getGroups(l, tl, genPred, prefixes, decomposition, c):
             f.insert(0, g)
             return f
         elif g:
-            return [g]
+            #return [g]
+            return g
         elif f:
             return f
     return []
@@ -174,6 +179,8 @@ def makePlanJoinBlock(jb, plan):
             ol.append(Optional(makePlanUnionBlock(bgp.bgg, plan)))
         elif isinstance(bgp, UnionBlock):
             sl.append(makePlanUnionBlock(bgp, plan))
+        elif isinstance(bgp, JoinBlock):
+            sl.append(makePlanJoinBlock(bgp, plan))
         elif isinstance(bgp, Service):
             sl.append(bgp)
     pl = makePlanAux(sl, plan,jb.filters)

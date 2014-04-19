@@ -666,6 +666,8 @@ unaryFunctor = {
     'isliteral',
     'STR',
     'str',
+    'UCASE',
+    'ucase',
     'LANG',
     'lang',
     'DATATYPE',
@@ -711,6 +713,7 @@ binaryFunctor = {
     'REGEX',
     'SAMETERM',
     'LANGMATCHES',
+    'CONTAINS',
     'langMatches',
     'regex',
     'sameTerm'

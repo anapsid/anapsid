@@ -449,10 +449,10 @@ def p_rest_union_block_0(p):
 
 def p_rest_union_block_1(p):
     """
-    rest_union_block : UNION join_block rest_union_block
+    rest_union_block : UNION LKEY join_block rest_union_block RKEY rest_union_block
     """
-    (jb,filters) = p[2]
-    p[0] = [JoinBlock(jb,filters)] + p[3]
+    (jb,filters) = p[3]
+    p[0] = [JoinBlock(jb,filters)] + p[4] + p[6]
 
 def p_join_block(p):
     """
@@ -484,17 +484,39 @@ def p_rest_join_block_2(p):
     (jb1,filters1) = p[1]
     p[0] = (jb1+jb2, filters1+filters2)
 
-def p_bgp_0(p):
+
+def p_bgp_00(p):
     """
-    bgp : LKEY group_graph_pattern RKEY
+    bgp : bgp  UNION bgp rest_union_block 
     """
-    p[0] = ([p[2]],[])
+    (jb1,filters1) = p[1]
+    (jb3,filters3) = p[3]
+    ggp = [JoinBlock(jb1,filters1)] + [JoinBlock(jb3,filters3)] + p[4]
+    ggp1 = [UnionBlock(ggp)]
+    p[0]=(ggp1,[])
+
+#def p_bgp_01(p):
+#    """
+#    bgp : join_block  UNION join_block rest_union_block 
+#    """
+#    (jb1,filters1) = p[1]
+#    (jb3,filters3) = p[3]
+#    ggp = [JoinBlock(jb1,filters1)] + [JoinBlock(jb3,filters3)] + p[4]
+#    ggp1 = [UnionBlock(ggp)]
+#    p[0]=(ggp1,[])
+
 
 def p_bgp_1(p):
-    """
-    bgp : service
-    """
-    p[0] = ([p[1]],[])
+   """
+   bgp : LKEY service RKEY
+   """
+   p[0] = ([p[2]],[])
+
+#def p_bgp_1(p):
+#    """
+#    bgp : service
+#    """
+#    p[0] = ([p[1]],[])
 
 def p_bgp_2(p):
     """

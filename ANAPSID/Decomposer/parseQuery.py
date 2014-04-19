@@ -29,6 +29,9 @@ reserved = {
     'SAMETERM': 'SAMETERM',
     'LANGMATCHES': 'LANGMATCHES',
     'STR': 'STR',
+    'UCASE' : 'UCASE',
+    'LCASE' : 'LCASE',
+    'CONTAINS' : 'CONTAINS',
     'UPPERCASE': 'UPPERCASE'
 }
 
@@ -298,9 +301,46 @@ def p_ggp_0(p):
 
 def p_union_block_0(p):
     """
-    union_block : join_block rest_union_block
+    union_block : pjoin_block rest_union_block POINT pjoin_block 
+    """
+    punion = [JoinBlock(p[1])] + p[2]
+    pjoin = [UnionBlock(punion)] + p[4]
+    p[0] = [JoinBlock(pjoin)]
+
+def p_union_block_1(p):
+    """
+    union_block : pjoin_block rest_union_block pjoin_block 
+    """
+    punion = [JoinBlock(p[1])] + p[2]
+    if (p[3]!=[]):
+       pjoin = [UnionBlock(punion)] + p[3]
+       p[0] = [JoinBlock(pjoin)]
+    else:
+       p[0] = [JoinBlock(p[1])] + p[2]
+
+def p_union_block_2(p):
+    """
+    union_block : pjoin_block rest_union_block
     """
     p[0] = [JoinBlock(p[1])] + p[2]
+
+def p_ppjoin_block_0(p):
+    """
+    pjoin_block : LKEY join_block RKEY 
+    """
+    p[0]=p[2]
+
+def p_ppjoin_block_1(p):
+    """
+    pjoin_block : join_block  
+    """
+    p[0]=p[1]
+
+def p_ppjoin_block_2(p):
+    """
+    pjoin_block : empty
+    """
+    p[0]=[]
 
 def p_rest_union_block_0(p):
     """
@@ -314,17 +354,17 @@ def p_rest_union_block_1(p):
     """
     p[0] = [JoinBlock(p[3])] + p[4] + p[6]
 
+
 def p_join_block_0(p):
     """
-    join_block : LKEY bgp rest_join_block RKEY rest_join_block 
+    join_block : LKEY union_block RKEY rest_join_block 
     """
-    jb_list = [p[2]]+ p[3]
-    if (p[5]!=[] and isinstance(p[5][0],Filter)):
-      p[0] = [UnionBlock([JoinBlock(jb_list)])] + p[5]
-    elif isinstance(p[2],UnionBlock):
-      p[0] =  [p[2]]+ p[3] + p[5]
-    else:       
-      p[0] = [UnionBlock([JoinBlock(jb_list)])] + p[5]
+    if (p[4]!=[] and isinstance(p[4][0],Filter)):
+       p[0] = [UnionBlock(p[2])] + p[4]
+    elif (p[4]!=[]):
+       p[0] = [UnionBlock(p[2])] + [JoinBlock(p[4])]
+    else:
+       p[0] = [UnionBlock(p[2])]
 
 def p_join_block_1(p):
     """
@@ -352,9 +392,16 @@ def p_rest_join_block_2(p):
 
 def p_bgp_0(p):
     """
-    bgp :  LKEY join_block UNION join_block rest_union_block RKEY
+    bgp :  LKEY bgp UNION bgp rest_union_block RKEY
     """
-    ggp = [JoinBlock(p[2])] + [JoinBlock(p[4])] + p[5]
+    ggp = [JoinBlock([p[2]])] + [JoinBlock([p[4]])] + p[5]
+    p[0] = UnionBlock(ggp)
+
+def p_bgp_01(p):
+    """
+    bgp : bgp UNION bgp rest_union_block 
+    """
+    ggp = [JoinBlock([p[1]])] + [JoinBlock([p[3]])] + p[4]
     p[0] = UnionBlock(ggp)
 
 
@@ -382,12 +429,21 @@ def p_bgp_4(p):
     """
     p[0] = Optional(p[3])
 
-def p_bgp_5(p):
+#def p_bgp_5(p):
+#    """
+#    bgp : LKEY join_block rest_union_block RKEY
+#    """
+#    bgp_arg = p[2] + p[3]
+#    p[0] = UnionBlock(JoinBlock(bgp_arg))
+
+def p_bgp_6(p):
     """
-    bgp : LKEY join_block rest_union_block RKEY
+    bgp : LKEY join_block RKEY
     """
-    bgp_arg = p[2] + p[3]
-    p[0] = UnionBlock(JoinBlock(bgp_arg))
+    if (len(p[2])==1):
+       p[0] = p[2][0]
+    else:
+       p[0] = JoinBlock(p[2])
 
 def p_expression_0(p):
     """
@@ -640,6 +696,11 @@ def p_binary_3(p):
     """
     p[0] = p[1]
 
+def p_binary_4(p):
+    """
+    binary_func : CONTAINS
+    """
+    p[0] = p[1]
 
 def p_unary_0(p):
     """
@@ -728,6 +789,18 @@ def p_unary_10(p):
 def p_unary_11(p):
     """
     unary_func : uri
+    """
+    p[0] = p[1]
+
+def p_unary_12(p):
+    """
+    unary_func : UCASE
+    """
+    p[0] = p[1]
+
+def p_unary_13(p):
+    """
+    unary_func : LCASE
     """
     p[0] = p[1]
 
