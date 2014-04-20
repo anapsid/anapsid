@@ -880,6 +880,20 @@ def p_unary_11(p):
     """
     p[0] = p[1]
 
+def p_predicate_rdftype(p):
+    """
+    predicate : ID
+    """
+    if  p[1] == 'a':
+        value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'
+        print 'value set'
+        p[0] = Argument(value,True)
+    else:
+        print 'raising'
+        p_error(p[1])
+        raise SyntaxError
+        print '...'
+
 def p_predicate_uri(p):
     """
     predicate : uri

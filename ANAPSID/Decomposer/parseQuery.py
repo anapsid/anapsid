@@ -36,6 +36,7 @@ reserved = {
 }
 
 tokens = [
+#    "RDFTYPE",
     "CONSTANT",
     "NUMBER",
     "VARIABLE",
@@ -83,10 +84,14 @@ tokens = [
     "OR"
     ] + list(reserved.values())
 
+#t_RDFTYPE = r"a"
+
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9\-]*'
+    print t
     t.type = reserved.get(t.value.upper(),'ID')    # Check for reserved words
     return t
+
 
 t_CONSTANT = r"(\"|\')[^\"\'\n\r]*(\"|\')((@[a-z][a-z]) | (\^\^\w+))?" 
 t_NUMBER = r"([0-9])+"
@@ -95,6 +100,7 @@ t_LKEY = r"\{"
 t_LPAR = r"\("
 t_RPAR = r"\)"
 t_COLON = r"\:"
+#t_RDFTYPE = r"a"
 #t_RKEY = r"(\.)?\}"
 t_RKEY = r"(\.)?\s*\}"
 t_POINT = r"\."
@@ -409,6 +415,7 @@ def p_bgp_1(p):
     """
     bgp : triple
     """
+    print "triple" + str(p[1])
     p[0] = p[1]
 
 def p_bgp_2(p):
@@ -815,16 +822,32 @@ def p_single_var_list(p):
     var_list : VARIABLE
     """
     p[0] = [Argument(p[1], False)]
+
 def p_triple_0(p):
     """
     triple : subject predicate object
     """
     p[0] = Triple(p[1], p[2], p[3])
 
+def p_predicate_rdftype(p):
+    """
+    predicate : ID
+    """
+    if  p[1] == 'a': 
+        value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'
+        print 'value set'
+        p[0] = Argument(value,True)
+    else:
+        print 'raising'
+        p_error(p[1])
+        raise SyntaxError
+        print '...'
+
 def p_predicate_uri(p):
     """
     predicate : uri
     """
+    print p[1]
     p[0] = Argument(p[1], True)
 
 def p_predicate_var(p):
@@ -865,7 +888,12 @@ def p_object_constant(p):
     p[0] = Argument(p[1], True)
 
 def p_error(p):
-        raise TypeError("unknown text at %r" % (p.value,))
+	print p
+	if isinstance(p, str): 
+		value = p
+	else:
+		value = p.value
+        raise TypeError("unknown text at %r" % (value,))
 
 parser = yacc.yacc(debug=0)
 
