@@ -88,7 +88,7 @@ tokens = [
 
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9\-]*'
-    print t
+    #print t
     t.type = reserved.get(t.value.upper(),'ID')    # Check for reserved words
     return t
 
@@ -415,7 +415,6 @@ def p_bgp_1(p):
     """
     bgp : triple
     """
-    print "triple" + str(p[1])
     p[0] = p[1]
 
 def p_bgp_2(p):
@@ -835,7 +834,6 @@ def p_predicate_rdftype(p):
     """
     if  p[1] == 'a': 
         value = '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'
-        print 'value set'
         p[0] = Argument(value,True)
     else:
         print 'raising'
@@ -847,7 +845,6 @@ def p_predicate_uri(p):
     """
     predicate : uri
     """
-    print p[1]
     p[0] = Argument(p[1], True)
 
 def p_predicate_var(p):
