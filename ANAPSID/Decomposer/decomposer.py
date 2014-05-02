@@ -80,12 +80,14 @@ def decomposeJoinBlock(jb, l, genPred, prefixes, decomposition, c):
 
     fl1=includeFilter(sl, fl)
     fl=list(set(fl) - set(fl1))
-    #print "sl" + str(sl)
+    #print "sl" + str(sl) + str(len(sl))
     #print "fl" + str(fl)
     if sl:
       if (len(sl)==1 and isinstance(sl[0],UnionBlock) and fl!=[]):
         sl[0]=updateFilters(sl[0],fl) 
-      return JoinBlock(sl,fl)
+      j=JoinBlock(sl,filters=fl)
+      #print "filters" + str(j.filters)
+      return j
     else:
         return None
 
@@ -187,7 +189,7 @@ def makePlanJoinBlock(jb, plan):
     if ol:
        pl = [pl]
        pl.extend(ol)
-    return JoinBlock(pl,jb.filters)
+    return JoinBlock(pl,filters=jb.filters)
 
 ###############################################################################
 # Making Unitary Star (used in previous version)

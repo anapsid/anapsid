@@ -97,7 +97,7 @@ class Xfilter(object):
    
     # Base case.   
     def evaluateOperator(self, operator, expr_left, expr_right):
-        
+        #print "operator in Filter", operator 
         if (operator in unary_operators):
             #print "Case: unary_operators"
             return self.evaluateUnaryOperator(operator, expr_left)

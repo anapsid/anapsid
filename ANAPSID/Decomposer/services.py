@@ -588,6 +588,12 @@ class Filter(object):
 
     def getVars(self):
         return self.expr.getVars()
+
+    def getVarsName(self):
+        vars=[]
+        for v in self.expr.getVars():
+            vars.append(v[1:len(v)])
+        return vars
     
     def getPredVars(self):
         return []
@@ -630,6 +636,9 @@ class Optional(object):
 
     def getVars(self):
         return self.bgg.getVars()
+    
+    def getPredVars(self):
+        return self.bgg.getPredVars()
 
     def places(self):
         return self.bgg.places()

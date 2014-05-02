@@ -494,7 +494,7 @@ def createPlan(query, adaptive, wc, buffersize, c, endpointType):
     #if (len(query.order_by) > 0):
     #    operatorTree = TreePlan(Xorderby(query.order_by), operatorTree.vars, operatorTree)
 
-    #print "operator type:", operatorTree
+    #print "Physical plan:", operatorTree
     return operatorTree
 
 def includePhysicalOperatorsQuery(query, a, wc, buffersize, c):
@@ -722,12 +722,28 @@ def includePhysicalOperators(query, tree, a, wc, buffersize, c):
     
     if isinstance(tree, Leaf):
         if isinstance(tree.service, Service):
-            return IndependentOperator(query, tree, c, buffersize)
+            if (tree.filters==[]):
+              return IndependentOperator(query, tree, c, buffersize)
+            else:
+              n=IndependentOperator(query, tree, c, buffersize)
+              for f in tree.filters:
+                   vars_f = f.getVarsName()
+                   if set(n.vars) & set(vars_f) == set(vars_f):
+                     n = TreePlan(Xfilter(f),n.vars,n)
+              return n
         elif isinstance(tree.service, UnionBlock):
             return includePhysicalOperatorsUnionBlock(query, tree.service,
                                                       a, wc, buffersize, c)
         elif isinstance(tree.service, JoinBlock):
-            return includePhysicalOperatorsJoinBlock(query, tree.service,a, wc, buffersize, c)
+            if (tree.filters==[]):
+               return includePhysicalOperatorsJoinBlock(query, tree.service,a, wc, buffersize, c)
+            else:
+               n = includePhysicalOperatorJoin(query, tree.service,a, wc, buffersize, c)
+               for f in tree.filters:
+                  vars_f = f.getVarsName()
+                  if set(n.vars) & set(vars_f) == set(vars_f):
+                      n = TreePlan(Xfilter(f),n.vars,n)
+               return n
         else:
             print "tree.service" + str(type(tree.service)) + str(tree.service)
             print "Error Type not considered"
@@ -743,6 +759,8 @@ def includePhysicalOperators(query, tree, a, wc, buffersize, c):
         else:
            n = includePhysicalOperatorJoin(a, wc, left_subtree, right_subtree)
            for f in tree.filters:
+             vars_f = f.getVarsName()
+             if set(n.vars) & set(vars_f) == set(vars_f):
                n = TreePlan(Xfilter(f),n.vars,n)
         return n 
 

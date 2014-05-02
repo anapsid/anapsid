@@ -159,12 +159,17 @@ def getDegree(vars0, dict0):
     return s
 
 class Leaf(Tree):
-    def __init__(self, s, vs, dc, filters=[]):
+    def __init__(self, s, vs, dc, filter=[]):
         self.vars = vs
         self.dict = dc
         self.size = 1
         self.service = s
-        self.filters = filters
+        self.filters=[]
+        serviceVars= s.getVars()
+        for f in filter:
+          vars_f = f.getVars()
+          if set(serviceVars) & set(vars_f) == set(vars_f):
+             self.filters.append(f)
 
     def __hash__(self):
         return hash((self.vars, self.dict, self.size, self.degree(), 
@@ -285,7 +290,7 @@ def sort(lss):
         lss.pop(m)
     return lo
 
-def createLeafs(lss):
+def createLeafs(lss,filters=[]):
 
     d = dict()
     for s in lss:
@@ -309,7 +314,7 @@ def createLeafs(lss):
         for v in l:
             if d.has_key(v):
                 e.add(v)
-        ls.append(Leaf(s, e, d))
+        ls.append(Leaf(s, e, d,filters))
 
     return (d, ls)
 
@@ -339,7 +344,7 @@ def makeNode(l, r,filters=[]):
     return n
 
 def makeBushyTree(ss,filters=[]):
-    (d, pq) = createLeafs(ss)
+    (d, pq) = createLeafs(ss,filters)
     heapq.heapify(pq)
     others = []
     while len(pq) > 1:
