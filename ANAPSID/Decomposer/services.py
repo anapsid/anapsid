@@ -23,8 +23,8 @@ class Service(object):
         else:
             triples_str = str(self.triples)
         filters_str = " . ".join(map(str, self.filters)) + " \n".join(map(str, self.filter_nested))
-        return ("\n    { SERVICE <" + self.endpoint + "> { "
-                + triples_str + filters_str + " } \n    }")
+        return (" { SERVICE <" + self.endpoint + "> { "
+                + triples_str + filters_str + " }   \n }")
 
     def allTriplesGeneral(self):
         a = True
@@ -161,7 +161,7 @@ class Query(object):
             d = "DISTINCT "
         else:
             d = ""
-        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {\n"+body_str+"\n"+self.filter_nested+"\n}" 
+        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {"+body_str+"\n"+self.filter_nested+"\n}" 
 
     def instantiate(self, d):
         new_args = []
@@ -198,7 +198,7 @@ class Query(object):
             d = "DISTINCT "
         else:
             d = ""
-        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {\n"+body_str+"\n"+self.filter_nested+"\n}"
+        return self.getPrefixes()+"SELECT "+d+args_str+"\nWHERE {"+body_str+"\n"+self.filter_nested+"\n}"
 
     def show2(self):
 
@@ -210,7 +210,7 @@ class Query(object):
             d = "DISTINCT "
         else:
             d = ""
-        return self.getPrefixes() + "SELECT " + d + args_str + "\nWHERE {\n" + body_str + "\n" + self.filter_nested + "\n}"
+        return self.getPrefixes() + "SELECT " + d + args_str + "\nWHERE {" + body_str + "\n" + self.filter_nested + "\n}"
 
     def getPrefixes(self):
         r = ""
@@ -483,9 +483,21 @@ class JoinBlock(object):
         return a
 
     def show(self, x):
-
         if isinstance(self.triples, list):
-            return ". ".join(map(str, self.triples)) + " ".join(map(str, self.filters)) + self.filters_str
+            joinBody=""
+            for j in self.triples:
+                if isinstance(j,list):
+                  if joinBody:
+                     joinBody=joinBody + ". ".join(map(str,j))
+                  else:
+                     joinBody=joinBody + " ".join(map(str,j))
+                else:
+                  if joinBody:
+                     joinBody=joinBody + ". " + str(j)
+                  else:
+                     joinBody=joinBody + " " + str(j)
+            return joinBody 
+            #return ". ".join(map(str, self.triples)) + " ".join(map(str, self.filters)) + self.filters_str
             #n = nest(self.triples)
             #if n:
             #    return aux(n, x, " . ") + " ".join(map(str, self.filters)) + self.filters_str

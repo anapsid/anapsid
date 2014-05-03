@@ -484,8 +484,17 @@ def p_rest_join_block_2(p):
     (jb1,filters1) = p[1]
     p[0] = (jb1+jb2, filters1+filters2)
 
-
 def p_bgp_00(p):
+    """
+    bgp : LKEY bgp  UNION bgp rest_union_block  RKEY
+    """
+    (jb1,filters1) = p[2]
+    (jb3,filters3) = p[4]
+    ggp = [JoinBlock(jb1,filters1)] + [JoinBlock(jb3,filters3)] + p[5]
+    ggp1 = [UnionBlock(ggp)]
+    p[0]=(ggp1,[])
+
+def p_bgp_01(p):
     """
     bgp : bgp  UNION bgp rest_union_block 
     """
@@ -542,6 +551,15 @@ def p_bgp_5(p):
     """
     p[0] = ([Optional(p[3])],[])
 
+def p_bgp_6(p):
+    """
+    bgp : LKEY join_block RKEY
+    """
+    (jb,filters)=p[2]
+    if (len(jb)==1):
+       p[0] = (jb,filters)
+    else:
+       p[0] = ([JoinBlock(jb,filters)],[])
 
 def p_triple_0(p):
     """
