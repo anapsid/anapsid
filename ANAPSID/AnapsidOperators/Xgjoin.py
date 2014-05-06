@@ -102,7 +102,7 @@ class Xgjoin(Join):
 
             if (len(self.left_table) + len(self.right_table) >= self.memorySize):
                 self.flushRJT()
-                print "Flushed RJT!"
+                #print "Flushed RJT!"
 
         # Turn off alarm to stage 2.
         signal.alarm(0)

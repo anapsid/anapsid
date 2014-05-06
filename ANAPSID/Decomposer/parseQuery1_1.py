@@ -514,6 +514,11 @@ def p_bgp_01(p):
 #    ggp1 = [UnionBlock(ggp)]
 #    p[0]=(ggp1,[])
 
+def p_bgp_11(p):
+   """
+   bgp : service 
+   """
+   p[0] = ([p[1]],[])
 
 def p_bgp_1(p):
    """

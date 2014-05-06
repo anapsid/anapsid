@@ -488,9 +488,9 @@ class JoinBlock(object):
             for j in self.triples:
                 if isinstance(j,list):
                   if joinBody:
-                     joinBody=joinBody + ". ".join(map(str,j))
+                     joinBody= joinBody + ". ".join(map(str,j)) 
                   else:
-                     joinBody=joinBody + " ".join(map(str,j))
+                     joinBody= joinBody + " ".join(map(str,j)) 
                 else:
                   if joinBody:
                      joinBody=joinBody + ". " + str(j)

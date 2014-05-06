@@ -466,6 +466,7 @@ def createPlan(query, adaptive, wc, buffersize, c, endpointType):
 
     endpType = endpointType
 
+    #print "query", query
     operatorTree = includePhysicalOperatorsQuery(query, adaptive, wc,
                                                  buffersize, c)
    
@@ -503,6 +504,7 @@ def includePhysicalOperatorsQuery(query, a, wc, buffersize, c):
 
 def includePhysicalOperatorsUnionBlock(query, ub, a, wc, buffersize, c):
     r = []
+    #print "ub.triples", ub.triples
     for jb in ub.triples:
         r.append(includePhysicalOperatorsJoinBlock(query, jb,
                                                    a, wc, buffersize, c))
