@@ -629,9 +629,11 @@ class Filter(object):
         return Filter(self.expr.instantiateFilter(d, filter_str))
 
     def constantNumber(self):
+        return 1
         return self.expr.constantNumber()
 
     def constantPercentage(self):
+        return 0.5
         return self.constantNumber()/self.places()
 
 class Optional(object):
@@ -786,11 +788,16 @@ class Expression(object):
         return
 
     def places(self):
-        return self.left.places() + self.right.places()
+        if (self.op in unaryFunctor):
+           return self.left.places()
+        else:
+           return self.left.places() + self.right.places()
 
     def constantNumber(self):
-
-        return self.left.constantNumber() + self.right.constantNumber()
+        if (self.op in unaryFunctor):
+           return self.left.constantNumber()
+        else:
+           return self.left.constantNumber() + self.right.constantNumber()
 
     def constantPercentage(self):
         return self.constantNumber()/self.places()
