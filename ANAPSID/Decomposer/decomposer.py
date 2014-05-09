@@ -135,6 +135,10 @@ def includeFilter(jb_triples, fl):
         for f in fl:
             fl2=includeFilterUnionBlock(jb,f)
             fl1=fl1+fl2
+      elif (isinstance(jb,Service)):
+        for f in fl:
+            fl2=includeFilterAuxS(f, jb.triples,jb)
+            fl1=fl1+fl2
     return fl1
 
 def includeFilterUnionBlock(jb,f):
@@ -149,13 +153,34 @@ def includeFilterUnionBlock(jb,f):
               fl1=fl1 + [f]
     return fl1 
 
+def includeFilterAuxS(f, sl,sr):
+    fl1=[]
+    serviceFilter=False
+    for s in sl:
+      vars_s = set()
+      if (isinstance(s,Triple)):
+          vars_s.update(set(getVars(s)))
+      else:
+          for t in s.triples:
+              vars_s.update(set(getVars(t)))
+      vars_f = f.getVars()
+      if set(vars_s) & set(vars_f) == set(vars_f):
+         serviceFilter=True
+    if serviceFilter:
+         sr.include_filter(f)
+         fl1=fl1 + [f]
+    return fl1
+
+
 def includeFilterAux(f, sl):
     fl1=[]
     for s in sl:
       vars_s = set()
       for t in s.triples:
+        print "t" + str(t)   
         vars_s.update(set(getVars(t)))
       vars_f = f.getVars()
+      print "vars_f" +str(vars_f)
       if set(vars_s) & set(vars_f) == set(vars_f):
          s.include_filter(f)
          fl1=fl1 + [f]

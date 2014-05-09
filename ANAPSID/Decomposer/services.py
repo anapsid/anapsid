@@ -788,13 +788,13 @@ class Expression(object):
         return
 
     def places(self):
-        if (self.op in unaryFunctor):
+        if ((self.op in unaryFunctor)or (self.expr.op == 'REGEX' and self.expr.right.desc ==False)):
            return self.left.places()
         else:
            return self.left.places() + self.right.places()
 
     def constantNumber(self):
-        if (self.op in unaryFunctor):
+        if ((self.op in unaryFunctor) or (self.expr.op == 'REGEX' and self.expr.right.desc ==False)):
            return self.left.constantNumber()
         else:
            return self.left.constantNumber() + self.right.constantNumber()

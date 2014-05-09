@@ -740,7 +740,7 @@ def includePhysicalOperators(query, tree, a, wc, buffersize, c):
             if (tree.filters==[]):
                return includePhysicalOperatorsJoinBlock(query, tree.service,a, wc, buffersize, c)
             else:
-               n = includePhysicalOperatorJoin(query, tree.service,a, wc, buffersize, c)
+               n = includePhysicalOperatorsJoinBlock(query, tree.service,a, wc, buffersize, c)
                for f in tree.filters:
                   vars_f = f.getVarsName()
                   if set(n.vars) & set(vars_f) == set(vars_f):
